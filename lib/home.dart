@@ -1,9 +1,30 @@
-import 'package:flutter/material.dart';
-import 'package:swifttrack/inc/base_constants.dart';
-import 'package:swifttrack/module.dart';
+import 'dart:convert';
 
-class Home extends StatelessWidget {
+import 'package:accordion/accordion.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swifttrack/inc/base_constants.dart';
+import 'package:swifttrack/login.dart';
+import 'package:swifttrack/model/assessment.dart';
+import 'package:swifttrack/model/assessment_list.dart';
+import 'package:swifttrack/module.dart';
+import 'package:http/http.dart' as http;
+
+class Home extends StatefulWidget {
   const Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  List<Assessment> assessmentListItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getDashboardInfo();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +87,10 @@ class Home extends StatelessWidget {
                       height: 20,
                     ),
                     Row(
-                      children: const [
+                      children: [
                         Text(
-                          "Competancy Name 1",
-                          style: TextStyle(
+                          assessmentListItems[index].name,
+                          style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -78,10 +99,10 @@ class Home extends StatelessWidget {
                       height: 5,
                     ),
                     Row(
-                      children: const [
+                      children: [
                         Text(
-                          "Points: 25/100",
-                          style: TextStyle(
+                          "${"Points: ${assessmentListItems[index].pointsEarned}"}/${assessmentListItems[index].pointsRequired}",
+                          style: const TextStyle(
                               fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -89,199 +110,129 @@ class Home extends StatelessWidget {
                     const SizedBox(
                       height: 25,
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Module(
-                                    moduleColor: Colors.orange,
+                    ListView.builder(
+                      itemCount: assessmentListItems[index].module.length,
+                      shrinkWrap: true,
+                      itemBuilder: (BuildContext context, int moduleIndex) {
+                        return Column(
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Module(
+                                      moduleColor: Color(
+                                        int.parse(assessmentListItems[index]
+                                            .module[moduleIndex]
+                                            .color),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ButtonStyle(
+                                shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                    // side: const BorderSide(
+                                    //   color: Colors.orange,
+                                    // ),
                                   ),
                                 ),
-                              );
-                            },
-                            style: ButtonStyle(
-                              shape: MaterialStateProperty.all<
-                                  RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                  side: const BorderSide(
-                                    color: Colors.orange,
+                                backgroundColor: MaterialStateProperty.all(
+                                  Color(
+                                    int.parse(assessmentListItems[index]
+                                        .module[moduleIndex]
+                                        .color),
                                   ),
                                 ),
                               ),
-                              backgroundColor:
-                                  MaterialStateProperty.all(Colors.orange),
-                            ),
-                            child: const Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                "Example learning module 1",
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.normal),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Text(
-                        //   "Example learning module",
-                        //   style: TextStyle(
-                        //       fontSize: 16,
-                        //       fontWeight: FontWeight.bold,
-                        //       color: Colors.white),
-                        // ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            children: const [
-                              Align(
-                                alignment: Alignment.centerLeft,
+                              child: Align(
+                                alignment: Alignment.topLeft,
                                 child: Text(
-                                  "10/20",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  assessmentListItems[index]
+                                      .module[moduleIndex]
+                                      .name,
+                                  style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.normal),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: const [
-                                  Text(
-                                    "Aware: 4",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    children: [
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          "${assessmentListItems[index].module[moduleIndex].pointsEarned}/${assessmentListItems[index].module[moduleIndex].pointsRequired}",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    "Processing: 2",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Text(
+                                            "${assessmentListItems[index].module[moduleIndex].progress1}: ${assessmentListItems[index].module[moduleIndex].progress1Count}",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${assessmentListItems[index].module[moduleIndex].progress2}: ${assessmentListItems[index].module[moduleIndex].progress2Count}",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${assessmentListItems[index].module[moduleIndex].progress3}: ${assessmentListItems[index].module[moduleIndex].progress3Count}",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    ],
                                   ),
-                                  Text(
-                                    "Satisfactory: 0",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 25,
-                    ),
-                    Container(
-                      // height: 40,
-                      color: Colors.lightBlueAccent,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Row(
-                          children: const [
-                            Flexible(
-                              child: Text(
-                                "Assessment module 47 Direct tug operations",
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white),
-                              ),
+                                )
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 25,
                             ),
                           ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Column(
-                            children: const [
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  "10/20",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: const [
-                                  Text(
-                                    "Aware: 4",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    "Processing: 2",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    "Satisfactory: 0",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            ],
-                          ),
-                        )
-                      ],
+                        );
+                      },
                     ),
                   ],
                 );
               },
               separatorBuilder: (BuildContext context, int index) =>
                   const Divider(),
-              itemCount: ['A', 'B'].length,
+              itemCount: assessmentListItems.length,
             ),
             // const Icon(Icons.directions_car),
             ListView.separated(
@@ -354,10 +305,92 @@ class Home extends StatelessWidget {
                   const Divider(),
               itemCount: ['A', 'B', 'C'].length,
             ),
-            const Icon(Icons.directions_bike),
+            Accordion(
+              maxOpenSections: 1,
+              contentBorderColor: Colors.black,
+              headerBackgroundColor: Colors.grey,
+              headerBorderRadius: 1,
+              contentBorderRadius: 1,
+              // headerTextStyle: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+              // leftIcon: const Icon(Icons.audiotrack, color: Colors.white),
+              children: [
+                AccordionSection(
+                  isOpen: false,
+                  header: const Text('Introduction: Using the app',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold)),
+                  content:
+                      const Text('This is the introduction right here ...'),
+                ),
+                AccordionSection(
+                  isOpen: true,
+                  header: const Text('Evidence required',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold)),
+                  content: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.all(8),
+                    itemCount: ['A', 'B', 'C'].length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Container(
+                        height: 50,
+                        color: Colors.amber,
+                        child: const Center(child: Text('Entry')),
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Divider(),
+                  ),
+                ),
+                // AccordionSection(
+                //   isOpen: true,
+                //   header: const Text('Company Info',
+                //       style: TextStyle(color: Colors.white, fontSize: 17)),
+                //   content:
+                //       Icon(Icons.airplay, size: 70, color: Colors.green[200]),
+                // ),
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  void getDashboardInfo() async {
+    var prefs = await SharedPreferences.getInstance();
+    var uuid = prefs.getString(BaseConstants.uuid)!;
+    var url = "${BaseConstants.baseUrl}${BaseConstants.getDashboardUrl}$uuid/";
+
+    http.Response response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      print(responseData);
+      // var responseData = jsonDecode(
+      // '{"status":"success","status_msg":"","type":1,"data":{"assessments":[{"name":"Competency name 1","uuid":"2eb97b3a-dcc4-4b18-977b-4926f17c1772","points_target":150,"points_earned":50,"modules":[{"name":"Assessment module 47 Direct tug operations 1","uuid":"5ca1637d-9098-4e9e-90a1-b8ea788c8938","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ff0000","perc":null,"disabled_levels":""},{"name":"Example learning module","uuid":"8f482277-0c5b-4642-b579-dd10456fc5b2","points_target":10,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#2475ad","perc":null,"disabled_levels":""}]},{"name":"Competency name 2","uuid":"a79db0cc-e707-4141-a6a3-1b141deeae98","points_target":100,"points_earned":50,"modules":[{"name":"Another Example learning module 2 name","uuid":"9g982342-3c5b-4642-b579-dd10456fc5b2","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ff6600","perc":null,"disabled_levels":""},{"name":"Assessment module 47 Direct tug operations 2","uuid":"b82785f2-a5a7-4b2c-97b0-16be0d43e5f0","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ccff73","perc":null,"disabled_levels":""}]}]}}');
+      if (responseData["status"] == "error") {
+        print("Here");
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (BuildContext context) {
+              return const Login();
+            },
+          ),
+          (Route route) => false,
+        );
+      } else {
+        final assessmentList =
+            AssessmentList.fromJson(responseData["data"]["assessments"]);
+
+        setState(() {
+          assessmentListItems = assessmentList.assessments;
+        });
+      }
+    }
   }
 }

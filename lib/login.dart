@@ -121,7 +121,8 @@ class _LoginState extends State<Login> {
               waitingForApiResponse = true;
             });
 
-            var parameters = "/0/${_username!}/${_password!}";
+            var parameters = "/0/${_username!}/${_password!}/1/";
+
             http.Response response = await http.get(Uri.parse(
                 BaseConstants.baseUrl + BaseConstants.getInfoUrl + parameters));
 
@@ -134,21 +135,21 @@ class _LoginState extends State<Login> {
               setState(() {
                 waitingForApiResponse = false;
               });
-              // print(responseData);
+              print(responseData);
               if (responseData["status"] == "success") {
-                var data = responseData["data"];
+                var data = responseData["data"]["account"];
                 var prefs = await SharedPreferences.getInstance();
                 await prefs.setString('uuid', data["uuid"]);
                 await prefs.setString('user_name', data["username"]);
                 await prefs.setString('first_name', data["first_name"]);
                 await prefs.setString('last_name', data["last_name"]);
                 await prefs.setString('email', data["email"]);
-                await prefs.setString('mobile', data["mobile"]);
-                await prefs.setString('points', data["points"]);
-                await prefs.setString('address', data["address"]);
-                await prefs.setString('company', data["comp_name"]);
-                await prefs.setString(
-                    'reward_img', data["img"]["dash_banner_1"]);
+                // await prefs.setString('mobile', data["mobile"]);
+                // await prefs.setString('points', data["points"]);
+                // await prefs.setString('address', data["address"]);
+                // await prefs.setString('company', data["comp_name"]);
+                // await prefs.setString(
+                //     'reward_img', data["img"]["dash_banner_1"]);
 
                 if (!mounted) return;
 

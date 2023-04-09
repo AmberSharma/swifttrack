@@ -33,7 +33,7 @@ class _InitScreenState extends State<InitScreen> {
       //   Login.tag: (BuildContext context) => const Login(),
       //   Dashboard.tag: (BuildContext context) => const Dashboard(),
       // },
-      theme: ThemeData(fontFamily: 'Montserrat'),
+      theme: ThemeData(fontFamily: 'Open Sans'),
       home: const SplashScreen(),
     );
   }

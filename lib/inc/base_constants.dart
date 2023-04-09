@@ -11,6 +11,10 @@ class BaseConstants {
 
   // URLS
 
-  static const baseUrl = "https://rewards.lumineux.co.uk/";
-  static const getInfoUrl = "api/get/user-info/";
+  static const baseUrl = "https://api.swifttrack.app/";
+  static const getInfoUrl = "get/user-info/";
+  static const getDashboardUrl = "get/dashboard/";
+
+  // Fields
+  static const uuid = "uuid";
 }
