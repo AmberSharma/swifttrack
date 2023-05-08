@@ -3,8 +3,8 @@ import 'package:swifttrack/model/module.dart';
 class Assessment {
   final String uuid;
   final String name;
-  final int pointsEarned;
-  final int pointsRequired;
+  final int? pointsEarned;
+  final int? pointsRequired;
   final List<Module> module;
 
   Assessment(

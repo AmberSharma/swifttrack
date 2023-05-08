@@ -127,6 +127,12 @@ class _HomeState extends State<Home> {
                                             .module[moduleIndex]
                                             .color),
                                       ),
+                                      moduleUUID: assessmentListItems[index]
+                                          .module[moduleIndex]
+                                          .uuid,
+                                      moduleName: assessmentListItems[index]
+                                          .module[moduleIndex]
+                                          .name,
                                     ),
                                   ),
                                 );
@@ -365,16 +371,13 @@ class _HomeState extends State<Home> {
     var prefs = await SharedPreferences.getInstance();
     var uuid = prefs.getString(BaseConstants.uuid)!;
     var url = "${BaseConstants.baseUrl}${BaseConstants.getDashboardUrl}$uuid/";
-
     http.Response response = await http.get(Uri.parse(url));
-
     if (response.statusCode == 200) {
       var responseData = jsonDecode(response.body);
       print(responseData);
       // var responseData = jsonDecode(
       // '{"status":"success","status_msg":"","type":1,"data":{"assessments":[{"name":"Competency name 1","uuid":"2eb97b3a-dcc4-4b18-977b-4926f17c1772","points_target":150,"points_earned":50,"modules":[{"name":"Assessment module 47 Direct tug operations 1","uuid":"5ca1637d-9098-4e9e-90a1-b8ea788c8938","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ff0000","perc":null,"disabled_levels":""},{"name":"Example learning module","uuid":"8f482277-0c5b-4642-b579-dd10456fc5b2","points_target":10,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#2475ad","perc":null,"disabled_levels":""}]},{"name":"Competency name 2","uuid":"a79db0cc-e707-4141-a6a3-1b141deeae98","points_target":100,"points_earned":50,"modules":[{"name":"Another Example learning module 2 name","uuid":"9g982342-3c5b-4642-b579-dd10456fc5b2","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ff6600","perc":null,"disabled_levels":""},{"name":"Assessment module 47 Direct tug operations 2","uuid":"b82785f2-a5a7-4b2c-97b0-16be0d43e5f0","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ccff73","perc":null,"disabled_levels":""}]}]}}');
       if (responseData["status"] == "error") {
-        print("Here");
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (BuildContext context) {
@@ -391,6 +394,15 @@ class _HomeState extends State<Home> {
           assessmentListItems = assessmentList.assessments;
         });
       }
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (BuildContext context) {
+            return const Login();
+          },
+        ),
+        (Route route) => false,
+      );
     }
   }
 }

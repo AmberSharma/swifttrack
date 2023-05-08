@@ -14,6 +14,7 @@ class BaseConstants {
   static const baseUrl = "https://api.swifttrack.app/";
   static const getInfoUrl = "get/user-info/";
   static const getDashboardUrl = "get/dashboard/";
+  static const getModuleUrl = "get/module/";
 
   // Fields
   static const uuid = "uuid";

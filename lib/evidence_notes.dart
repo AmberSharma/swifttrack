@@ -131,7 +131,6 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                   fit: BoxFit.fill,
                                 ),
                                 onTap: () {
-                                  print(file.split("##")[1]);
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -210,7 +209,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                     ),
                     onPressed: () async {
                       var allowedExtensions = ['jpg', 'pdf', 'jpeg', 'png'];
-                      var imageExtensions = ['jpg', 'png', 'jpeg'];
+                      //var imageExtensions = ['jpg', 'png', 'jpeg'];
 
                       final filesList = await showCustomDialogPopup<String?>(
                           context, const FilePickerOrCamera());
@@ -220,7 +219,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
 
                         for (var element in filesPicked.files) {
                           setState(() {
-                            print(files.length);
+                            //print(files.length);
                             if (files.length == 7) {
                               const CustomSnackBar(
                                       data: "Maximum 7 files can be added")
@@ -233,7 +232,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                 } else {
                                   files.add(element.path.toString());
                                 }
-                                print(files);
+                                //print(files);
                                 _platformFile.add(element);
                               } else {
                                 const CustomSnackBar(
