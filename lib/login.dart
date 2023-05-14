@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swifttrack/home.dart';
 import 'package:swifttrack/inc/base_constants.dart';
 import 'package:swifttrack/inc/custom_snack_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:url_launcher/url_launcher.dart';
 
 class Login extends StatefulWidget {
@@ -24,6 +25,7 @@ class _LoginState extends State<Login> {
   bool? waitingForApiResponse = false;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -121,20 +123,21 @@ class _LoginState extends State<Login> {
               waitingForApiResponse = true;
             });
 
-            var parameters = "/0/${_username!}/${_password!}/1/";
-
+            var parameters = "0/${_username!}/${_password!}/1/";
+            print(
+                BaseConstants.baseUrl + BaseConstants.getInfoUrl + parameters);
             http.Response response = await http.get(Uri.parse(
                 BaseConstants.baseUrl + BaseConstants.getInfoUrl + parameters));
-
+            print(response.statusCode);
             if (response.statusCode == 200) {
               if (!mounted) return;
               var responseData = jsonDecode(response.body);
               CustomSnackBar(data: responseData["status_msg"])
                   .showSnackBar(context);
-
               setState(() {
                 waitingForApiResponse = false;
               });
+
               print(responseData);
               if (responseData["status"] == "success") {
                 var data = responseData["data"]["account"];
@@ -151,12 +154,30 @@ class _LoginState extends State<Login> {
                 // await prefs.setString(
                 //     'reward_img', data["img"]["dash_banner_1"]);
 
-                if (!mounted) return;
+                try {
+                  dynamic user = await _auth.createUserWithEmailAndPassword(
+                      email: data["email"], password: _password!);
 
+                  if (!mounted) return;
+
+                  if (user != null) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) {
+                          return const Home();
+                        },
+                      ),
+                      (Route route) => false,
+                    );
+                  }
+                } catch (e) {
+                  print(e);
+                }
+              } else {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (BuildContext context) {
-                      return const Home();
+                      return const Login();
                     },
                   ),
                   (Route route) => false,

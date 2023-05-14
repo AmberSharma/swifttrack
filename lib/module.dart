@@ -41,6 +41,60 @@ class _ModuleState extends State<Module> {
     getModuleInfo();
   }
 
+  Widget _dropdownList(moduleElement) {
+    // return DropdownButton<String>(
+    //   //value: dropdownValue,
+    //   icon: const Icon(Icons.unfold_more),
+    //   elevation: 16,
+    //   style: const TextStyle(color: Colors.deepPurple),
+    //   underline: Container(
+    //     height: 1,
+    //     color: Colors.deepPurpleAccent,
+    //   ),
+    //   onChanged: (String? value) {
+    //     print(value);
+    //     // This is called when the user selects an item.
+    //     // setState(() {
+    //     //   dropdownValue = value!;
+    //     // });
+    //   },
+    //   items: moduleElement.duration
+    //       .split(",")
+    //       .map<DropdownMenuItem<String>>((String value) {
+    //     return DropdownMenuItem<String>(
+    //       value: value,
+    //       child: Text("$value ${moduleElement.durationSuffix!}"),
+    //     );
+    //   }).toList(),
+    // );
+
+    return SizedBox(
+      width: 100.0,
+      child: DropdownButtonFormField<String>(
+        // isDense: true,
+        isExpanded: true,
+        decoration: const InputDecoration(
+          prefixIcon: Icon(Icons.unfold_more),
+        ),
+        // hint: Text('Please choose account type'),
+        items: moduleElement.duration
+            .split(",")
+            .map<DropdownMenuItem<String>>((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(
+              "$value ${moduleElement.durationSuffix!}",
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          );
+        }).toList(),
+        icon:
+            const Visibility(visible: false, child: Icon(Icons.arrow_downward)),
+        onChanged: (_) {},
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,347 +102,325 @@ class _ModuleState extends State<Module> {
         backgroundColor: Colors.white,
         title: const Text('Tabs Demo'),
       ),
-      body: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                // flex: 1,
-                child: Container(
-                  color: widget.moduleColor,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        widget.moduleName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          color: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  // flex: 1,
+                  child: Container(
+                    color: widget.moduleColor,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          widget.moduleName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          Column(
-            // mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 400,
-                margin: const EdgeInsets.only(top: 20),
-                child: ListView.builder(
-                  // shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        if (moduleElementListItems[index].type ==
-                            "heading") ...[
-                          Container(
-                            color: Colors.grey[300],
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Html(
-                                    data:
-                                        "<b>${moduleElementListItems[index].label}.</b>&nbsp;&nbsp;${moduleElementListItems[index].content}",
-                                    style: {
-                                      "b": Style(
-                                          //fontWeight: FontWeight.bold,
-                                          fontSize: FontSize.large,
-                                          color: Colors.black),
-                                    },
-                                  )
+              ],
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                return Column(
+                  children: [
+                    if (moduleElementListItems[index].type == "heading") ...[
+                      Container(
+                        color: Colors.grey[300],
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Html(
+                                data:
+                                    "<b>${moduleElementListItems[index].label}.</b>&nbsp;&nbsp;${moduleElementListItems[index].content}",
+                                style: {
+                                  "b": Style(
+                                      //fontWeight: FontWeight.bold,
+                                      fontSize: FontSize.large,
+                                      color: Colors.black),
+                                },
+                              )
 
-                                  // Text(
-                                  //   moduleElementListItems[index].content,
-                                  //   //"1. Be Able to direct preparations for tug operations",
-                                  //   style: const TextStyle(
-                                  //     fontWeight: FontWeight.bold,
-                                  //     fontSize: 22,
-                                  //     color: Colors.black,
-                                  //   ),
-                                  // ),
-                                  ),
-                            ),
-                          ),
-                        ] else ...[
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Html(
-                                          data:
-                                              "${moduleElementListItems[index].label}. ${moduleElementListItems[index].content}",
-                                          style: {
-                                            "p": Style(
-                                              padding:
-                                                  const EdgeInsets.all(0.0),
-                                            ),
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Stack(children: [
-                                              IconButton(
-                                                iconSize: 25,
-                                                icon: const Icon(
-                                                  Icons.zoom_in,
-                                                  // color: Colors.orange,
-                                                ),
-                                                // the method which is called
-                                                // when button is pressed
-                                                onPressed: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const EvidenceNotes(),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-
-                                              // AppBarAction.notificationCounter !=
-                                              //         0
-                                              //     ?
-                                              Positioned(
-                                                right: 2,
-                                                top: 2,
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.all(2),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            6),
-                                                  ),
-                                                  constraints:
-                                                      const BoxConstraints(
-                                                    minWidth: 14,
-                                                    minHeight: 14,
-                                                  ),
-                                                  child: const Text(
-                                                    "15",
-                                                    style: TextStyle(
-                                                        color: Colors.green,
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                              //: Container(),
-                                            ]),
-                                            Stack(children: [
-                                              IconButton(
-                                                iconSize: 25,
-                                                icon: const Icon(
-                                                  Icons.description,
-                                                  // color: Colors.orange,
-                                                ),
-                                                // the method which is called
-                                                // when button is pressed
-                                                onPressed: () {},
-                                              ),
-                                              Positioned(
-                                                right: 2,
-                                                top: 2,
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.all(2),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            6),
-                                                  ),
-                                                  constraints:
-                                                      const BoxConstraints(
-                                                    minWidth: 14,
-                                                    minHeight: 14,
-                                                  ),
-                                                  child: const Text(
-                                                    "15",
-                                                    style: TextStyle(
-                                                        color: Colors.green,
-                                                        fontSize: 8,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                              //: Container(),
-                                            ]),
-                                          ],
-                                        ),
-                                        moduleElementListItems[index]
-                                                    .duration ==
-                                                ""
-                                            ? Container()
-                                            : Row(
-                                                children: [
-                                                  DropdownButton<String>(
-                                                    //value: dropdownValue,
-                                                    icon: const Icon(
-                                                        Icons.arrow_downward),
-                                                    elevation: 16,
-                                                    style: const TextStyle(
-                                                        color:
-                                                            Colors.deepPurple),
-                                                    underline: Container(
-                                                      height: 2,
-                                                      color: Colors
-                                                          .deepPurpleAccent,
-                                                    ),
-                                                    onChanged: (String? value) {
-                                                      print(value);
-                                                      // This is called when the user selects an item.
-                                                      // setState(() {
-                                                      //   dropdownValue = value!;
-                                                      // });
-                                                    },
-                                                    items: moduleElementListItems[
-                                                            index]
-                                                        .duration
-                                                        .split(",")
-                                                        .map<
-                                                            DropdownMenuItem<
-                                                                String>>((String
-                                                            value) {
-                                                      return DropdownMenuItem<
-                                                          String>(
-                                                        value: value,
-                                                        child: Text(value),
-                                                      );
-                                                    }).toList(),
-                                                  ),
-                                                  Text(
-                                                    "${moduleElementListItems[index].points!} points",
-                                                    style: const TextStyle(
-                                                      // fontWeight: FontWeight.bold,
-                                                      fontSize: 18,
-                                                      color: Colors.black,
-                                                    ),
-                                                  ),
-                                                ],
-                                              )
-                                      ],
-                                    )
-                                  ],
-                                ),
+                              // Text(
+                              //   moduleElementListItems[index].content,
+                              //   //"1. Be Able to direct preparations for tug operations",
+                              //   style: const TextStyle(
+                              //     fontWeight: FontWeight.bold,
+                              //     fontSize: 22,
+                              //     color: Colors.black,
+                              //   ),
+                              // ),
                               ),
-                              Expanded(
-                                flex: 1,
-                                child: Column(
-                                  children: [
-                                    IconButton(
-                                      iconSize: 40,
-                                      icon: Icon(
-                                        Icons.check_circle,
-                                        color: getLevelColor(
-                                            moduleElementListItems[index]),
-                                      ),
-                                      // the method which is called
-                                      // when button is pressed
-                                      onPressed: () {
-                                        var level =
-                                            moduleElementListItems[index]
-                                                .setLevel;
-                                        var firstSelectableValue = '';
-                                        var inFlag = 0;
-                                        for (var i = 0;
-                                            i < moduleLevelListItems.length;
-                                            i++) {
-                                          if (moduleLevelListItems[i]
-                                                  .selectable !=
-                                              0) {
-                                            if (firstSelectableValue.isEmpty) {
-                                              firstSelectableValue =
-                                                  moduleLevelListItems[i].level;
-                                            }
-
-                                            if (level == null ||
-                                                int.parse(
-                                                        moduleLevelListItems[i]
-                                                            .level) >
-                                                    level) {
-                                              level = int.parse(
-                                                  moduleLevelListItems[i]
-                                                      .level);
-                                              inFlag = 1;
-                                              break;
-                                            }
-                                          }
-                                        }
-                                        if (inFlag == 0) {
-                                          level =
-                                              int.parse(firstSelectableValue);
-                                        }
-                                        setState(() {
-                                          moduleElementListItems[index]
-                                              .setLevel = level;
-                                        });
+                        ),
+                      ),
+                    ] else ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Html(
+                                      data:
+                                          "${moduleElementListItems[index].label}. ${moduleElementListItems[index].content}",
+                                      style: {
+                                        "p": Style(
+                                          padding: const EdgeInsets.all(0.0),
+                                        ),
                                       },
                                     ),
-                                    ...moduleLevelListItems
-                                        .map<Widget>((element) {
-                                      return getFormattedLevelText(
-                                          moduleElementListItems[index],
-                                          element);
-                                    }).toList(),
-                                    // moduleLevelListItems
-                                    //     .asMap()
-                                    //     .entries
-                                    //     .map((entry) {
-                                    //   print(entry);
-                                    //   // Text(
-                                    //   //   entry.name,
-                                    //   //   style: TextStyle(
-                                    //   //       fontWeight: FontWeight.bold),
-                                    //   // );
-                                    // }),
-                                    // const Text(
-                                    //   "Aware",
-                                    //   style: TextStyle(
-                                    //       fontWeight: FontWeight.bold),
-                                    // ),
-                                    // const Text("Processing"),
-                                    // const Text("Satisfactory"),
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        const SizedBox(
+                                          width: 8.0,
+                                        ),
+                                        Stack(children: [
+                                          IconButton(
+                                            iconSize: 25,
+                                            icon: const Icon(
+                                              Icons.zoom_in,
+                                              // color: Colors.orange,
+                                            ),
+                                            // the method which is called
+                                            // when button is pressed
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const EvidenceNotes(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          moduleElementListItems[index]
+                                                  .note
+                                                  .isNotEmpty
+                                              ? Positioned(
+                                                  right: 4,
+                                                  top: 6,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              6),
+                                                    ),
+                                                    constraints:
+                                                        const BoxConstraints(
+                                                      minWidth: 14,
+                                                      minHeight: 14,
+                                                    ),
+                                                    child: Text(
+                                                      moduleElementListItems[
+                                                              index]
+                                                          .note
+                                                          .length
+                                                          .toString(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 8,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ),
+                                                )
+                                              : Container(),
+                                        ]),
+                                        Stack(children: [
+                                          IconButton(
+                                            iconSize: 25,
+                                            icon: const Icon(
+                                              Icons.description,
+                                              // color: Colors.orange,
+                                            ),
+                                            // the method which is called
+                                            // when button is pressed
+                                            onPressed: () {},
+                                          ),
+                                          moduleElementListItems[index]
+                                                  .evidence
+                                                  .isNotEmpty
+                                              ? Positioned(
+                                                  right: 2,
+                                                  top: 6,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              6),
+                                                    ),
+                                                    constraints:
+                                                        const BoxConstraints(
+                                                      minWidth: 14,
+                                                      minHeight: 14,
+                                                    ),
+                                                    child: Text(
+                                                      moduleElementListItems[
+                                                              index]
+                                                          .evidence
+                                                          .length
+                                                          .toString(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 8,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ),
+                                                )
+                                              : Container(),
+                                        ]),
+                                      ],
+                                    ),
+                                    moduleElementListItems[index].duration == ""
+                                        ? Container()
+                                        : Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              _dropdownList(
+                                                  moduleElementListItems[
+                                                      index]),
+                                              const SizedBox(
+                                                width: 10.0,
+                                              ),
+                                              Text(
+                                                "${moduleElementListItems[index].points!} points",
+                                                style: const TextStyle(
+                                                    // fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              ),
+                                            ],
+                                          )
                                   ],
                                 ),
-                              )
-                            ],
+                                const Divider(
+                                  color: Colors.grey,
+                                  thickness: 2,
+                                  indent: 20,
+                                  //endIndent: 0,
+                                )
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              children: [
+                                IconButton(
+                                  iconSize: 40,
+                                  icon: Icon(
+                                    Icons.check_circle,
+                                    color: getLevelColor(
+                                        moduleElementListItems[index]),
+                                  ),
+                                  // the method which is called
+                                  // when button is pressed
+                                  onPressed: () {
+                                    var level =
+                                        moduleElementListItems[index].setLevel;
+                                    var firstSelectableValue = '';
+                                    var inFlag = 0;
+                                    for (var i = 0;
+                                        i < moduleLevelListItems.length;
+                                        i++) {
+                                      if (moduleLevelListItems[i].selectable !=
+                                          0) {
+                                        if (firstSelectableValue.isEmpty) {
+                                          firstSelectableValue =
+                                              moduleLevelListItems[i].level;
+                                        }
+
+                                        if (level == null ||
+                                            int.parse(moduleLevelListItems[i]
+                                                    .level) >
+                                                level) {
+                                          level = int.parse(
+                                              moduleLevelListItems[i].level);
+                                          inFlag = 1;
+                                          break;
+                                        }
+                                      }
+                                    }
+                                    if (inFlag == 0) {
+                                      level = int.parse(firstSelectableValue);
+                                    }
+                                    setState(() {
+                                      moduleElementListItems[index].setLevel =
+                                          level;
+                                    });
+                                  },
+                                ),
+                                ...moduleLevelListItems.map<Widget>((element) {
+                                  return getFormattedLevelText(
+                                      moduleElementListItems[index], element);
+                                }).toList(),
+                                // moduleLevelListItems
+                                //     .asMap()
+                                //     .entries
+                                //     .map((entry) {
+                                //   print(entry);
+                                //   // Text(
+                                //   //   entry.name,
+                                //   //   style: TextStyle(
+                                //   //       fontWeight: FontWeight.bold),
+                                //   // );
+                                // }),
+                                // const Text(
+                                //   "Aware",
+                                //   style: TextStyle(
+                                //       fontWeight: FontWeight.bold),
+                                // ),
+                                // const Text("Processing"),
+                                // const Text("Satisfactory"),
+                              ],
+                            ),
                           )
-                        ]
-                      ],
-                    );
-                  },
-                  itemCount: moduleElementListItems.length,
-                ),
-              ),
-            ],
-          ),
-        ],
+                        ],
+                      )
+                    ]
+                  ],
+                );
+              },
+              itemCount: moduleElementListItems.length,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -431,24 +463,27 @@ class _ModuleState extends State<Module> {
           //print(moduleLevelListItems);
         });
       }
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (BuildContext context) {
+            return const Login();
+          },
+        ),
+        (Route route) => false,
+      );
     }
-    //else {
-    //   Navigator.of(context).pushAndRemoveUntil(
-    //     MaterialPageRoute(
-    //       builder: (BuildContext context) {
-    //         return const Login();
-    //       },
-    //     ),
-    //     (Route route) => false,
-    //   );
-    // }
   }
 
   getLevelColor(ModuleElement moduleElementListItem) {
+    if (moduleElementListItem.setLevel == null) {
+      return const Color(0xFFE0E0E0);
+    }
     for (var i = 0; i < moduleLevelListItems.length; i++) {
       if (moduleLevelListItems[i].level ==
           moduleElementListItem.setLevel.toString()) {
-        return Color(int.parse(moduleLevelListItems[i].color));
+        var color = moduleLevelListItems[i].color;
+        return Color(int.parse(color));
       }
     }
   }
