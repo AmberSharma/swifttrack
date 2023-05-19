@@ -27,10 +27,11 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
+      // throw UnsupportedError(
+      //   'DefaultFirebaseOptions have not been configured for windows - '
+      //   'you can reconfigure this by running the FlutterFire CLI again.',
+      // );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -66,7 +67,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '104022790962',
     projectId: 'swifttracklocal',
     storageBucket: 'swifttracklocal.appspot.com',
-    iosClientId: '104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com',
+    iosClientId:
+        '104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com',
     iosBundleId: 'com.example.swifttrack',
   );
 
@@ -76,7 +78,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '104022790962',
     projectId: 'swifttracklocal',
     storageBucket: 'swifttracklocal.appspot.com',
-    iosClientId: '104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com',
+    iosClientId:
+        '104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com',
     iosBundleId: 'com.example.swifttrack',
   );
 }

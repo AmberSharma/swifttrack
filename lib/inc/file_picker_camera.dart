@@ -77,7 +77,7 @@ class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
                               iconSize: 75.0,
                               color: Colors.white,
                               onPressed: () async {
-                                FilePickerResult filesPicked =
+                                FilePickerResult? filesPicked =
                                     (await FilePicker.platform.pickFiles(
                                   allowMultiple: true,
                                   type: FileType.custom,
@@ -87,7 +87,7 @@ class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
                                     'jpeg',
                                     'png'
                                   ],
-                                ))!;
+                                ));
 
                                 List filesList = [
                                   {"name": "file", "data": filesPicked}

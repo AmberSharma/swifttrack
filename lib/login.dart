@@ -126,8 +126,11 @@ class _LoginState extends State<Login> {
             var parameters = "0/${_username!}/${_password!}/1/";
             print(
                 BaseConstants.baseUrl + BaseConstants.getInfoUrl + parameters);
-            http.Response response = await http.get(Uri.parse(
-                BaseConstants.baseUrl + BaseConstants.getInfoUrl + parameters));
+            // var url =
+            //     BaseConstants.baseUrl + BaseConstants.getInfoUrl + parameters;
+            var url =
+                "https://api.swifttrack.app/get/user-info/9d52bb89-ac77-4901-a183-8e7b22ef56d6/1/";
+            http.Response response = await http.get(Uri.parse(url));
             print(response.statusCode);
             if (response.statusCode == 200) {
               if (!mounted) return;
@@ -147,7 +150,7 @@ class _LoginState extends State<Login> {
                 await prefs.setString('first_name', data["first_name"]);
                 await prefs.setString('last_name', data["last_name"]);
                 await prefs.setString('email', data["email"]);
-                // await prefs.setString('mobile', data["mobile"]);
+                await prefs.setString('logo', data["logo"]);
                 // await prefs.setString('points', data["points"]);
                 // await prefs.setString('address', data["address"]);
                 // await prefs.setString('company', data["comp_name"]);
@@ -156,7 +159,9 @@ class _LoginState extends State<Login> {
 
                 try {
                   dynamic user = await _auth.createUserWithEmailAndPassword(
-                      email: data["email"], password: _password!);
+                    email: data["email"],
+                    password: _password!,
+                  );
 
                   if (!mounted) return;
 
@@ -170,10 +175,47 @@ class _LoginState extends State<Login> {
                       (Route route) => false,
                     );
                   }
+                } on FirebaseAuthException catch (e) {
+                  if (e.code == 'email-already-in-use') {
+                    //print('The account already exists for that email.');
+                    try {
+                      dynamic user = _auth.signInWithEmailAndPassword(
+                        email: data["email"],
+                        password: _password!,
+                      );
+
+                      if (!mounted) return;
+
+                      if (user != null) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) {
+                              return const Home();
+                            },
+                          ),
+                          (Route route) => false,
+                        );
+                      }
+                    } on FirebaseAuthException catch (e) {
+                      var errMsg = "";
+                      if (e.code == 'user-not-found') {
+                        errMsg = 'No user found for that email.';
+                      } else if (e.code == 'wrong-password') {
+                        errMsg = 'Wrong password provided for that user.';
+                      }
+
+                      if (errMsg.isNotEmpty) {
+                        CustomSnackBar(data: errMsg).showSnackBar(context);
+                      }
+                    }
+                  }
                 } catch (e) {
                   print(e);
                 }
               } else {
+                setState(() {
+                  waitingForApiResponse = false;
+                });
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (BuildContext context) {

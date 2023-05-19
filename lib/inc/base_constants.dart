@@ -18,4 +18,5 @@ class BaseConstants {
 
   // Fields
   static const uuid = "uuid";
+  static const username = "user_name";
 }

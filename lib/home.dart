@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:accordion/accordion.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swifttrack/inc/base_constants.dart';
 import 'package:swifttrack/login.dart';
@@ -73,7 +74,24 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          title: const Text('Tabs Demo'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SvgPicture.network(
+                'https://swifttrack.app/assets/img/swifttrack-logo.svg',
+                fit: BoxFit.contain,
+                height: 60,
+                width: 80,
+              ),
+            ],
+          ),
+          // title: Padding(
+          //   padding: const EdgeInsets.all(8.0),
+          //   child: SvgPicture.network(
+          //     'https://swifttrack.app/assets/img/swifttrack-logo.svg',
+          //     fit: BoxFit.fill,
+          //   ),
+          // ),
         ),
         body: TabBarView(
           children: [
@@ -176,27 +194,26 @@ class _HomeState extends State<Home> {
                                 Expanded(
                                   flex: 1,
                                   child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          "${assessmentListItems[index].module[moduleIndex].pointsEarned}/${assessmentListItems[index].module[moduleIndex].pointsRequired}",
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      Text(
+                                        "${assessmentListItems[index].module[moduleIndex].pointsEarned}/${assessmentListItems[index].module[moduleIndex].pointsRequired}",
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
                                 Expanded(
-                                  flex: 2,
+                                  flex: 3,
                                   child: Column(
                                     children: [
                                       Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
+                                            MainAxisAlignment.spaceAround,
                                         children: [
                                           Text(
                                             "${assessmentListItems[index].module[moduleIndex].progress1}: ${assessmentListItems[index].module[moduleIndex].progress1Count}",
@@ -278,7 +295,8 @@ class _HomeState extends State<Home> {
                                       RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(5.0),
-                                        side: BorderSide(color: Colors.black),
+                                        side: const BorderSide(
+                                            color: Colors.black),
                                       ),
                                     ),
                                     backgroundColor: MaterialStateProperty.all(

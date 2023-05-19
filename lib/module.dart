@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swifttrack/evidence_notes.dart';
@@ -29,6 +31,7 @@ class Module extends StatefulWidget {
 }
 
 class _ModuleState extends State<Module> {
+  final FirebaseAuth auth = FirebaseAuth.instance;
   List<ModuleElement> moduleElementListItems = [];
   List<ModuleLevel> moduleLevelListItems = [];
   List levelColor = [];
@@ -42,32 +45,6 @@ class _ModuleState extends State<Module> {
   }
 
   Widget _dropdownList(moduleElement) {
-    // return DropdownButton<String>(
-    //   //value: dropdownValue,
-    //   icon: const Icon(Icons.unfold_more),
-    //   elevation: 16,
-    //   style: const TextStyle(color: Colors.deepPurple),
-    //   underline: Container(
-    //     height: 1,
-    //     color: Colors.deepPurpleAccent,
-    //   ),
-    //   onChanged: (String? value) {
-    //     print(value);
-    //     // This is called when the user selects an item.
-    //     // setState(() {
-    //     //   dropdownValue = value!;
-    //     // });
-    //   },
-    //   items: moduleElement.duration
-    //       .split(",")
-    //       .map<DropdownMenuItem<String>>((String value) {
-    //     return DropdownMenuItem<String>(
-    //       value: value,
-    //       child: Text("$value ${moduleElement.durationSuffix!}"),
-    //     );
-    //   }).toList(),
-    // );
-
     return SizedBox(
       width: 100.0,
       child: DropdownButtonFormField<String>(
@@ -82,9 +59,13 @@ class _ModuleState extends State<Module> {
             .map<DropdownMenuItem<String>>((String value) {
           return DropdownMenuItem<String>(
             value: value,
-            child: Text(
-              "$value ${moduleElement.durationSuffix!}",
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "$value ${moduleElement.durationSuffix!}",
+                style:
+                    const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+              ),
             ),
           );
         }).toList(),
@@ -101,8 +82,45 @@ class _ModuleState extends State<Module> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text('Tabs Demo'),
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8.0, 0.0, 20.0, 0.0),
+            child: TextButton(
+              style: TextButton.styleFrom(
+                textStyle: const TextStyle(fontSize: 20),
+              ),
+              onPressed: () async {
+                FirebaseFirestore.instance.settings =
+                    const Settings(persistenceEnabled: false);
+
+                try {
+                  for (var item in moduleElementListItems) {
+                    if (item.type != "heading" &&
+                        item.uuid == "a6e2c2b4-8bbd-4acd-8ed7-26a76dca90ed") {
+                      CollectionReference collectionRef = FirebaseFirestore
+                          .instance
+                          .collection('user_module_settings');
+
+                      Map<String, String> dataToSave = {
+                        'dropdown_value': "1",
+                        'record_id': item.uuid,
+                        'user_id': auth.currentUser!.uid,
+                        'flag': item.setLevel.toString()
+                      };
+                      collectionRef.add(dataToSave);
+                    }
+                  }
+                } catch (error) {
+                  print(error);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
+        physics: const ScrollPhysics(),
         child: Column(
           children: [
             Row(
@@ -130,6 +148,7 @@ class _ModuleState extends State<Module> {
               ],
             ),
             ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemBuilder: (context, index) {
                 return Column(
@@ -168,7 +187,7 @@ class _ModuleState extends State<Module> {
                       Row(
                         children: [
                           Expanded(
-                            flex: 2,
+                            flex: 3,
                             child: Column(
                               children: [
                                 Padding(
@@ -178,11 +197,11 @@ class _ModuleState extends State<Module> {
                                     child: Html(
                                       data:
                                           "${moduleElementListItems[index].label}. ${moduleElementListItems[index].content}",
-                                      style: {
-                                        "p": Style(
-                                          padding: const EdgeInsets.all(0.0),
-                                        ),
-                                      },
+                                      // style: {
+                                      //   "p": Style(
+                                      //     padding: const EdgeInsets.all(0.0),
+                                      //   ),
+                                      // },
                                     ),
                                   ),
                                 ),
@@ -195,10 +214,14 @@ class _ModuleState extends State<Module> {
                                           MainAxisAlignment.spaceAround,
                                       children: [
                                         const SizedBox(
-                                          width: 8.0,
+                                          width: 10.0,
                                         ),
                                         Stack(children: [
                                           IconButton(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8.0,
+                                                vertical: 12.0),
+                                            constraints: const BoxConstraints(),
                                             iconSize: 25,
                                             icon: const Icon(
                                               Icons.zoom_in,
@@ -207,20 +230,38 @@ class _ModuleState extends State<Module> {
                                             // the method which is called
                                             // when button is pressed
                                             onPressed: () {
+                                              // if (moduleElementListItems[index]
+                                              //     .note
+                                              //     .isNotEmpty) {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
                                                   builder: (context) =>
-                                                      const EvidenceNotes(),
+                                                      EvidenceNotes(
+                                                    tabNumber: 0,
+                                                    moduleId:
+                                                        moduleElementListItems[
+                                                                index]
+                                                            .uuid,
+                                                    evidence:
+                                                        moduleElementListItems[
+                                                                index]
+                                                            .evidence,
+                                                    note:
+                                                        moduleElementListItems[
+                                                                index]
+                                                            .note,
+                                                  ),
                                                 ),
                                               );
+                                              // }
                                             },
                                           ),
                                           moduleElementListItems[index]
                                                   .note
                                                   .isNotEmpty
                                               ? Positioned(
-                                                  right: 4,
+                                                  left: 22,
                                                   top: 6,
                                                   child: Container(
                                                     padding:
@@ -256,6 +297,9 @@ class _ModuleState extends State<Module> {
                                         ]),
                                         Stack(children: [
                                           IconButton(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 4.0, vertical: 8.0),
+                                            constraints: const BoxConstraints(),
                                             iconSize: 25,
                                             icon: const Icon(
                                               Icons.description,
@@ -263,14 +307,40 @@ class _ModuleState extends State<Module> {
                                             ),
                                             // the method which is called
                                             // when button is pressed
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              // if (moduleElementListItems[index]
+                                              //     .evidence
+                                              //     .isNotEmpty) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      EvidenceNotes(
+                                                    tabNumber: 1,
+                                                    moduleId:
+                                                        moduleElementListItems[
+                                                                index]
+                                                            .uuid,
+                                                    evidence:
+                                                        moduleElementListItems[
+                                                                index]
+                                                            .evidence,
+                                                    note:
+                                                        moduleElementListItems[
+                                                                index]
+                                                            .note,
+                                                  ),
+                                                ),
+                                              );
+                                              // }
+                                            },
                                           ),
                                           moduleElementListItems[index]
                                                   .evidence
                                                   .isNotEmpty
                                               ? Positioned(
-                                                  right: 2,
-                                                  top: 6,
+                                                  left: 22,
+                                                  top: 2,
                                                   child: Container(
                                                     padding:
                                                         const EdgeInsets.all(2),
@@ -305,19 +375,21 @@ class _ModuleState extends State<Module> {
                                         ]),
                                       ],
                                     ),
-                                    moduleElementListItems[index].duration == ""
-                                        ? Container()
-                                        : Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              _dropdownList(
-                                                  moduleElementListItems[
-                                                      index]),
-                                              const SizedBox(
-                                                width: 10.0,
-                                              ),
-                                              Text(
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        moduleElementListItems[index]
+                                                    .duration ==
+                                                ""
+                                            ? Container()
+                                            : _dropdownList(
+                                                moduleElementListItems[index]),
+                                        moduleElementListItems[index]
+                                                    .duration ==
+                                                ""
+                                            ? Container()
+                                            : Text(
                                                 "${moduleElementListItems[index].points!} points",
                                                 style: const TextStyle(
                                                     // fontWeight: FontWeight.bold,
@@ -325,12 +397,13 @@ class _ModuleState extends State<Module> {
                                                     fontWeight:
                                                         FontWeight.w600),
                                               ),
-                                            ],
-                                          )
+                                      ],
+                                    )
                                   ],
                                 ),
                                 const Divider(
                                   color: Colors.grey,
+                                  height: 40,
                                   thickness: 2,
                                   indent: 20,
                                   //endIndent: 0,
@@ -343,7 +416,7 @@ class _ModuleState extends State<Module> {
                             child: Column(
                               children: [
                                 IconButton(
-                                  iconSize: 40,
+                                  iconSize: 35,
                                   icon: Icon(
                                     Icons.check_circle,
                                     color: getLevelColor(
@@ -493,6 +566,7 @@ class _ModuleState extends State<Module> {
     return Text(
       element.name,
       style: TextStyle(
+          fontSize: 12,
           color: moduleElementListItem.setLevel.toString() != element.level
               ? Colors.blueGrey
               : Colors.black,
