@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swifttrack/evidence_notes.dart';
 import 'package:swifttrack/login.dart';
@@ -38,6 +39,8 @@ class _ModuleState extends State<Module> {
   String dropdownValue = list.first;
   final List<String> items = List<String>.generate(8, (i) => 'Item $i');
 
+  List changedSections = [];
+
   @override
   void initState() {
     super.initState();
@@ -45,33 +48,38 @@ class _ModuleState extends State<Module> {
   }
 
   Widget _dropdownList(moduleElement) {
+    print(moduleElement.duration);
+    print(moduleElement.setDuration);
+    var dropdownItems = moduleElement.duration.split(",");
+    dropdownItems.add("");
+
     return SizedBox(
-      width: 100.0,
+      width: 70.0,
       child: DropdownButtonFormField<String>(
         // isDense: true,
         isExpanded: true,
         decoration: const InputDecoration(
-          prefixIcon: Icon(Icons.unfold_more),
-        ),
+            prefixIcon: Icon(Icons.unfold_more),
+            prefixIconConstraints: BoxConstraints(maxWidth: 40)),
+        value: moduleElement.setDuration,
         // hint: Text('Please choose account type'),
-        items: moduleElement.duration
-            .split(",")
-            .map<DropdownMenuItem<String>>((String value) {
+        items: dropdownItems.map<DropdownMenuItem<String>>((String value) {
+          // print(value);
           return DropdownMenuItem<String>(
             value: value,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "$value ${moduleElement.durationSuffix!}",
-                style:
-                    const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-              ),
+            child: Text(
+              "$value ${moduleElement.durationSuffix!}",
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
             ),
           );
         }).toList(),
         icon:
             const Visibility(visible: false, child: Icon(Icons.arrow_downward)),
-        onChanged: (_) {},
+        onChanged: (value) {
+          setState(() {
+            moduleElement.setDuration = value.toString();
+          });
+        },
       ),
     );
   }
@@ -94,20 +102,61 @@ class _ModuleState extends State<Module> {
                     const Settings(persistenceEnabled: false);
 
                 try {
+                  print(changedSections);
                   for (var item in moduleElementListItems) {
                     if (item.type != "heading" &&
-                        item.uuid == "a6e2c2b4-8bbd-4acd-8ed7-26a76dca90ed") {
+                        changedSections.contains(item.uuid)) {
                       CollectionReference collectionRef = FirebaseFirestore
                           .instance
-                          .collection('user_module_settings');
+                          .collection(BaseConstants.userModuleSettings);
 
+                      var dateTimeNow = DateFormat('yyyy-MM-dd kk:mm:ss')
+                          .format(DateTime.now());
                       Map<String, String> dataToSave = {
-                        'dropdown_value': "1",
+                        'duration': item.setDuration.toString(),
                         'record_id': item.uuid,
                         'user_id': auth.currentUser!.uid,
-                        'flag': item.setLevel.toString()
+                        'level': item.setLevel.toString(),
+                        'updated': dateTimeNow
                       };
-                      collectionRef.add(dataToSave);
+
+                      var prefs = await SharedPreferences.getInstance();
+
+                      SharedPreferences.getInstance().then((data) {
+                        data.getKeys().forEach((key) {
+                          print(key);
+                          print(data.get(key));
+                        });
+                      });
+                      var element = jsonDecode(prefs
+                          .getString("${BaseConstants.userModule}_${item.uuid}")
+                          .toString());
+                      print(element);
+                      if (element.containsKey("firebase_collection_id") &&
+                          element["firebase_collection_id"].isNotEmpty) {
+                        collectionRef
+                            .doc(element["firebase_collection_id"])
+                            .update(dataToSave);
+                      } else {
+                        DocumentReference docRef =
+                            await collectionRef.add(dataToSave);
+                        print(docRef.id);
+
+                        element["firebase_collection_id"] = docRef.id;
+
+                        // prefs.setString(
+                        //     "user_module_${item.uuid}", jsonEncode(element));
+                      }
+
+                      element["updated"] = dateTimeNow;
+                      element["duration"] = item.setDuration;
+                      element["set_level"] = item.setLevel;
+
+                      print(element);
+                      prefs.setString(
+                          "${BaseConstants.userModule}_${item.uuid}",
+                          jsonEncode(element));
+                      //collectionRef.update(dataToSave);
                     }
                   }
                 } catch (error) {
@@ -162,7 +211,7 @@ class _ModuleState extends State<Module> {
                               padding: const EdgeInsets.all(8.0),
                               child: Html(
                                 data:
-                                    "<b>${moduleElementListItems[index].label}.</b>&nbsp;&nbsp;${moduleElementListItems[index].content}",
+                                    "<b>${moduleElementListItems[index].label}</b>&nbsp;&nbsp;${moduleElementListItems[index].content}",
                                 style: {
                                   "b": Style(
                                       //fontWeight: FontWeight.bold,
@@ -196,7 +245,7 @@ class _ModuleState extends State<Module> {
                                     alignment: Alignment.centerLeft,
                                     child: Html(
                                       data:
-                                          "${moduleElementListItems[index].label}. ${moduleElementListItems[index].content}",
+                                          "${moduleElementListItems[index].label} ${moduleElementListItems[index].content}",
                                       // style: {
                                       //   "p": Style(
                                       //     padding: const EdgeInsets.all(0.0),
@@ -385,12 +434,15 @@ class _ModuleState extends State<Module> {
                                             ? Container()
                                             : _dropdownList(
                                                 moduleElementListItems[index]),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
                                         moduleElementListItems[index]
                                                     .duration ==
                                                 ""
                                             ? Container()
                                             : Text(
-                                                "${moduleElementListItems[index].points!} points",
+                                                "${moduleElementListItems[index].setPoints!} points",
                                                 style: const TextStyle(
                                                     // fontWeight: FontWeight.bold,
                                                     fontSize: 12,
@@ -456,6 +508,11 @@ class _ModuleState extends State<Module> {
                                     setState(() {
                                       moduleElementListItems[index].setLevel =
                                           level;
+                                      if (!changedSections.contains(
+                                          moduleElementListItems[index].uuid)) {
+                                        changedSections.add(
+                                            moduleElementListItems[index].uuid);
+                                      }
                                     });
                                   },
                                 ),
@@ -501,6 +558,8 @@ class _ModuleState extends State<Module> {
   void getModuleInfo() async {
     print(widget.moduleUUID);
     var prefs = await SharedPreferences.getInstance();
+    // prefs.clear();
+
     var uuid = prefs.getString(BaseConstants.uuid)!;
     // ignore: unused_local_variable
     var url =
@@ -522,6 +581,47 @@ class _ModuleState extends State<Module> {
           (Route route) => false,
         );
       } else {
+        for (int i = 0; i < responseData["data"]["elements"].length; i++) {
+          if (prefs.containsKey(
+              '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}')) {
+            var specificModuleData = jsonDecode(prefs
+                .getString(
+                    '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}')
+                .toString());
+
+            specificModuleData["updated"] = specificModuleData["updated"] ??
+                specificModuleData["created"] ??
+                DateFormat('yyyy-MM-dd kk:mm:ss').format(DateTime.now());
+            responseData["data"]["elements"][i]["updated"] =
+                responseData["data"]["elements"][i]["updated"] ??
+                    responseData["data"]["elements"][i]["created"];
+
+            if (responseData["data"]["elements"][i]["updated"] == null ||
+                DateTime.parse(specificModuleData["updated"]).isAfter(
+                    DateTime.parse(
+                        responseData["data"]["elements"][i]["updated"]))) {
+              responseData["data"]["elements"][i] = specificModuleData;
+            } else {
+              if (specificModuleData.containsKey("firebase_collection_id") &&
+                  specificModuleData["firebase_collection_id"].isNotEmpty) {
+                FirebaseFirestore.instance
+                    .collection(BaseConstants.userModuleSettings)
+                    .doc(specificModuleData["firebase_collection_id"])
+                    .delete();
+              }
+              specificModuleData = responseData["data"]["elements"][i];
+
+              prefs.setString(
+                  '${BaseConstants.userModule}_${specificModuleData["uuid"]}',
+                  jsonEncode(specificModuleData));
+            }
+          } else {
+            prefs.setString(
+                '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}',
+                jsonEncode(responseData["data"]["elements"][i]));
+          }
+        }
+
         final moduleElementList =
             ElementList.fromJson(responseData["data"]["elements"]);
         final moduleLevelList =
@@ -530,9 +630,10 @@ class _ModuleState extends State<Module> {
         setState(() {
           moduleElementListItems = moduleElementList.moduleElement;
           moduleLevelListItems = moduleLevelList.level;
-          moduleLevelListItems.asMap().entries.map((entry) {
-            print(entry);
-          });
+          // moduleElementListIte
+          //ms.asMap().entries.map((entry) {
+          //   print(entry);
+          // });
           //print(moduleLevelListItems);
         });
       }

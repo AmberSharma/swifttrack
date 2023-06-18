@@ -1,7 +1,7 @@
 {
   "file_generated_by": "FlutterFire CLI",
   "purpose": "FirebaseAppID & ProjectID for this Firebase app in this directory",
-  "GOOGLE_APP_ID": "1:104022790962:ios:c00b4ec25e3c0163e63d2b",
-  "FIREBASE_PROJECT_ID": "swifttracklocal",
-  "GCM_SENDER_ID": "104022790962"
+  "GOOGLE_APP_ID": "1:106652086885:ios:7dbbd86b1fd0a30db90c8c",
+  "FIREBASE_PROJECT_ID": "swifttrack-dam-27fda",
+  "GCM_SENDER_ID": "106652086885"
 }

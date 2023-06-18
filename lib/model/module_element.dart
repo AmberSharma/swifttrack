@@ -1,5 +1,5 @@
 // import 'package:swifttrack/model/module.dart';
-
+import 'package:intl/intl.dart';
 import 'package:swifttrack/model/evidence.dart';
 import 'package:swifttrack/model/note.dart';
 
@@ -10,8 +10,12 @@ class ModuleElement {
   final String content;
   final String duration;
   final String? durationSuffix;
-  final int? points;
+  final String points;
+  int? setPoints;
   int? setLevel;
+  String? setDuration;
+  String updatedAt;
+  String? firebaseCollectionId;
   final List<Evidence> evidence;
   final List<Note> note;
   //final List<Module> module;
@@ -24,7 +28,10 @@ class ModuleElement {
       required this.duration,
       required this.durationSuffix,
       required this.points,
+      required this.setPoints,
       required this.setLevel,
+      required this.setDuration,
+      required this.updatedAt,
       required this.evidence,
       required this.note});
 
@@ -47,15 +54,22 @@ class ModuleElement {
         ? noteData.map((noteData) => Note.fromJson(noteData)).toList()
         : <Note>[];
 
+    var points = 0;
+
     return ModuleElement(
         uuid: data["uuid"],
         type: data["type"],
-        label: data["label"],
+        label: data["label"] == null ? "" : data["label"] + ".",
         content: data["content"],
         duration: data["duration"] ?? "",
         durationSuffix: data["duration_suffix"],
-        points: data["points"],
+        points: data["points"] ?? "",
+        setPoints: data["set_points"] ?? 0,
         setLevel: data["set_level"],
+        setDuration:
+            data["set_duration"] == null ? "" : data["set_duration"].toString(),
+        updatedAt: data["updated"] ??
+            DateFormat('yyyy-MM-dd kk:mm:ss').format(DateTime.now()),
         evidence: evidence,
         note: note);
   }
@@ -69,7 +83,10 @@ class ModuleElement {
       'duration': duration,
       'durationSuffix': durationSuffix,
       'points': points,
+      'setPoints': setPoints,
       'setLevel': setLevel,
+      'setDuration': setDuration,
+      'updated': updatedAt,
       'evidence': evidence,
       'note': note
     };

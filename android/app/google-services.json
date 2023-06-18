@@ -1,40 +1,40 @@
 {
   "project_info": {
-    "project_number": "104022790962",
-    "project_id": "swifttracklocal",
-    "storage_bucket": "swifttracklocal.appspot.com"
+    "project_number": "106652086885",
+    "project_id": "swifttrack-dam-27fda",
+    "storage_bucket": "swifttrack-dam-27fda.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:104022790962:android:7e6fde522dde74f6e63d2b",
+        "mobilesdk_app_id": "1:106652086885:android:d433a1e75f738505b90c8c",
         "android_client_info": {
-          "package_name": "com.example.swifttrack"
+          "package_name": "app.swifttrack"
         }
       },
       "oauth_client": [
         {
-          "client_id": "104022790962-96u5np2v69iuf2bqbo636ssvjrgm36r4.apps.googleusercontent.com",
+          "client_id": "106652086885-lgn4brlohjq1qgag3dajga1j8rd4d05l.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA8n5nHahU0rFP5y7UuHnMN5lK2Qtsr5Vs"
+          "current_key": "AIzaSyBKvQ_o0l0tRs-Go60eGijm54nCqBYsYsA"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "104022790962-96u5np2v69iuf2bqbo636ssvjrgm36r4.apps.googleusercontent.com",
+              "client_id": "106652086885-lgn4brlohjq1qgag3dajga1j8rd4d05l.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com",
+              "client_id": "106652086885-q9piaqhmp7oep2f7n6e0iu2jqe9vefua.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.swifttrack"
+                "bundle_id": "app.swifttrack"
               }
             }
           ]

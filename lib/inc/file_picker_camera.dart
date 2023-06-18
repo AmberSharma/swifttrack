@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:swifttrack/classes/sound_recorder.dart';
 import 'package:swifttrack/inc/base_constants.dart';
 // import 'package:lumineux_rewards_app/common/AppBarAction.dart';
 
@@ -17,6 +18,54 @@ class FilePickerOrCamera extends StatefulWidget {
 
 class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
   int apiCall = 0;
+  final recorder = SoundRecorder();
+
+  @override
+  void initState() {
+    super.initState();
+
+    recorder.init();
+  }
+
+  @override
+  void dispose() {
+    recorder.dispose();
+
+    super.dispose();
+  }
+
+  Widget audioButton() {
+    final isRecording = recorder.isRecording;
+    final icon = isRecording ? Icons.stop : Icons.graphic_eq;
+    final text = isRecording ? "STOP" : BaseConstants.addAudioLabel;
+    final primaryColor = isRecording ? Colors.red : Colors.white;
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(icon),
+          iconSize: 75.0,
+          color: primaryColor,
+          onPressed: () async {
+            await recorder.toggleRecording();
+
+            if (isRecording) {
+              List filesList = [
+                {"name": "audio", "data": recorder.getAudioFilePath()}
+              ];
+
+              if (!mounted) return;
+              Navigator.pop(context, filesList);
+            }
+            setState(() {});
+          },
+        ),
+        Text(
+          text,
+          style: TextStyle(color: primaryColor),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,41 +189,7 @@ class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        Column(
-                          children: [
-                            IconButton(
-                              icon: Image.asset("images/add-file.png"),
-                              iconSize: 75.0,
-                              color: Colors.white,
-                              onPressed: () async {
-                                FilePickerResult filesPicked =
-                                    (await FilePicker.platform.pickFiles(
-                                  allowMultiple: true,
-                                  type: FileType.custom,
-                                  allowedExtensions: [
-                                    'jpg',
-                                    'pdf',
-                                    'jpeg',
-                                    'png'
-                                  ],
-                                ))!;
-
-                                List filesList = [
-                                  {"name": "file", "data": filesPicked}
-                                ];
-
-                                if (!mounted) return;
-                                Navigator.pop(context, filesList);
-                              },
-                            ),
-                            const Text(
-                              BaseConstants.addAudioLabel,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
+                      children: <Widget>[audioButton()],
                     ),
                   ],
                 ),

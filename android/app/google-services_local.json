@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "104022790962",
+    "project_id": "swifttracklocal",
+    "storage_bucket": "swifttracklocal.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104022790962:android:7e6fde522dde74f6e63d2b",
+        "android_client_info": {
+          "package_name": "com.example.swifttrack"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "104022790962-96u5np2v69iuf2bqbo636ssvjrgm36r4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8n5nHahU0rFP5y7UuHnMN5lK2Qtsr5Vs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104022790962-96u5np2v69iuf2bqbo636ssvjrgm36r4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.swifttrack"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

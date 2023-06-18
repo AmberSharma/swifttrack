@@ -3,21 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>106652086885-q9piaqhmp7oep2f7n6e0iu2jqe9vefua.apps.googleusercontent.com</string>
+	<string>104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.106652086885-q9piaqhmp7oep2f7n6e0iu2jqe9vefua</string>
+	<string>com.googleusercontent.apps.104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r</string>
 	<key>API_KEY</key>
-	<string>AIzaSyDo4joesz2t8luJMm7gy320E0emhLk8yhI</string>
+	<string>AIzaSyDqjNTVr3DLTh6tWVJ8YUXQnYqs0UVaXKQ</string>
 	<key>GCM_SENDER_ID</key>
-	<string>106652086885</string>
+	<string>104022790962</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>app.swifttrack</string>
+	<string>com.example.swifttrack</string>
 	<key>PROJECT_ID</key>
-	<string>swifttrack-dam-27fda</string>
+	<string>swifttracklocal</string>
 	<key>STORAGE_BUCKET</key>
-	<string>swifttrack-dam-27fda.appspot.com</string>
+	<string>swifttracklocal.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:106652086885:ios:86b8ccef06293777b90c8c</string>
+	<string>1:104022790962:ios:c00b4ec25e3c0163e63d2b</string>
 </dict>
 </plist>

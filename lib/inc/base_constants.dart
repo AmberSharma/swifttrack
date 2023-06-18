@@ -9,6 +9,8 @@ class BaseConstants {
   static const addAFileLabel = "Add a file";
   static const addAudioLabel = "Add audio";
 
+  static const participantsLabel = "participants";
+
   // URLS
 
   static const baseUrl = "https://api.swifttrack.app/";
@@ -19,4 +21,10 @@ class BaseConstants {
   // Fields
   static const uuid = "uuid";
   static const username = "user_name";
+
+  // Firebase Table
+  static const userModuleSettings = "user_module_settings";
+
+  // Random
+  static const userModule = "user_module";
 }

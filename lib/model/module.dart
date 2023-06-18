@@ -31,7 +31,9 @@ class Module {
       pointsEarned: data["points_earned"],
       pointsRequired: data["points_target"],
       // ignore: prefer_interpolation_to_compose_strings
-      color: data["color"].replaceAll(RegExp('#'), '0xff'),
+      color: data["color"] == ""
+          ? "0xff000000"
+          : data["color"].replaceAll(RegExp('#'), '0xff'),
       progress1: data["prog_1_title"],
       progress1Count: data["prog_1_count"],
       progress2: data["prog_2_title"],

@@ -1,12 +1,15 @@
 import 'dart:io';
+import 'dart:math';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:swifttrack/classes/sound_recorder.dart';
 import 'package:swifttrack/image_detail_screen.dart';
 import 'package:swifttrack/inc/base_constants.dart';
 import 'package:swifttrack/model/evidence.dart';
@@ -39,6 +42,8 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
   late final List _platformFile;
   final FirebaseAuth auth = FirebaseAuth.instance;
   final _firebaseStorage = FirebaseStorage.instance;
+  AudioPlayer player = AudioPlayer();
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +95,111 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
           ),
         ],
       );
+
+  Widget getGestureButtonWithIcon(file) {
+    //if (file.indexOf('image##') != -1) {
+    var imagePath = file.indexOf('image##') != -1 ? file.split("##")[1] : file;
+    var gestureButton = GestureDetector(
+      child: Hero(
+        tag: 'imageHero${Random().nextInt(1000)}',
+        child: Image.file(
+          File(
+            imagePath,
+          ),
+          fit: BoxFit.cover,
+        ),
+      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) {
+              return ImageDetailScreen(
+                imageUrl: imagePath,
+              );
+            },
+          ),
+        );
+      },
+    );
+    //}
+    if (file.indexOf('pdf##') != -1) {
+      gestureButton = GestureDetector(
+        child: Image.asset(
+          "images/pdf-icon.jpg",
+          fit: BoxFit.fill,
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) {
+                return PdfDetailScreen(
+                  pdfUrl: file.split("##")[1],
+                );
+              },
+            ),
+          );
+        },
+      );
+    }
+
+    if (file.indexOf('audio##') != -1) {
+      gestureButton = GestureDetector(
+        child: const Icon(
+          Icons.library_music,
+          size: 50,
+        ),
+        onTap: () async {
+          await player.play(DeviceFileSource(file.split("##")[1]));
+          // await player.play(
+          //   file.split("##")[1],
+          // );
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (_) {
+          //       await player.play(file.split("##")[1], isLocal: true);
+          //       // return PdfDetailScreen(
+          //       //   pdfUrl: file.split("##")[1],
+          //       // );
+          //     },
+          //   ),
+          // );
+        },
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      // alignment: AlignmentDirectional.topEnd,
+      children: [
+        ClipRRect(
+            borderRadius: BorderRadius.circular(10), // Image border
+            child: gestureButton),
+        Align(
+          alignment: Alignment.topRight,
+          child: Container(
+              padding: EdgeInsets.zero,
+              height: 30,
+              width: 30,
+              child: GestureDetector(
+                  onTap: () {
+                    var fileIndex = files.indexOf(file);
+                    setState(() {
+                      files.removeAt(fileIndex);
+                      _platformFile.removeAt(fileIndex);
+                    });
+                  },
+                  child: const Icon(
+                    Icons.cancel,
+                    color: Colors.grey,
+                    size: 30.0,
+                  ))),
+        )
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,33 +316,40 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                   var prefs = await SharedPreferences.getInstance();
                   var username = prefs.getString(BaseConstants.username)!;
                   print(username);
-                  String uniqueFileName =
-                      DateTime.now().millisecondsSinceEpoch.toString();
 
                   Reference referenceRoot = _firebaseStorage.ref();
-                  Reference referenceDirImages = referenceRoot.child(username);
-
-                  Reference referenceImageToUpload =
-                      referenceDirImages.child(uniqueFileName);
+                  Reference referenceDirImages = referenceRoot
+                      .child(BaseConstants.participantsLabel + "/" + username);
 
                   try {
                     for (var item in files) {
-                      await referenceImageToUpload.putFile(File(item));
-                      var imageUrl =
-                          await referenceImageToUpload.getDownloadURL();
+                      if (item.indexOf("##") != -1) {
+                        item = item.split("##")[1];
+                      }
+
+                      String uniqueFileName =
+                          DateTime.now().millisecondsSinceEpoch.toString();
+
+                      Reference referenceImageToUpload =
+                          referenceDirImages.child(uniqueFileName);
+
+                      TaskSnapshot taskSnapshot =
+                          await referenceImageToUpload.putFile(File(item));
+                      var imageUrl = await taskSnapshot.ref.getDownloadURL();
+                      print(item);
                       print(imageUrl.toString());
+                      print(referenceImageToUpload.name);
+                      // CollectionReference collectionRef =
+                      //     FirebaseFirestore.instance.collection('user_uploads');
 
-                      CollectionReference collectionRef =
-                          FirebaseFirestore.instance.collection('user_uploads');
-
-                      Map<String, String> dataToSave = {
-                        'date': DateTime.now().toString(),
-                        'module_id': widget.moduleId,
-                        'session_id': auth.currentUser!.refreshToken.toString(),
-                        'user_id': auth.currentUser!.uid,
-                        'image_url': imageUrl.toString()
-                      };
-                      collectionRef.add(dataToSave);
+                      // Map<String, String> dataToSave = {
+                      //   'date': DateTime.now().toString(),
+                      //   'module_id': widget.moduleId,
+                      //   'session_id': auth.currentUser!.refreshToken.toString(),
+                      //   'user_id': auth.currentUser!.uid,
+                      //   'image_url': imageUrl.toString()
+                      // };
+                      // collectionRef.add(dataToSave);
                     }
                   } catch (error) {
                     print(error);
@@ -254,77 +371,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
               mainAxisSpacing: 10,
               crossAxisCount: 4,
               children: [
-                ...files.map(
-                  (file) => Stack(
-                    fit: StackFit.expand,
-                    // alignment: AlignmentDirectional.topEnd,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10), // Image border
-                        child: file.indexOf('pdf##') != 0
-                            ? GestureDetector(
-                                child: Image.asset(
-                                  "images/pdf-icon.jpg",
-                                  fit: BoxFit.fill,
-                                ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) {
-                                        return PdfDetailScreen(
-                                          pdfUrl: file.split("##")[1],
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              )
-                            : GestureDetector(
-                                child: Hero(
-                                  tag: 'imageHero',
-                                  child: Image.file(
-                                    File(file),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) {
-                                        return ImageDetailScreen(
-                                          imageUrl: file,
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: Container(
-                            padding: EdgeInsets.zero,
-                            height: 30,
-                            width: 30,
-                            child: GestureDetector(
-                                onTap: () {
-                                  var fileIndex = files.indexOf(file);
-                                  setState(() {
-                                    files.removeAt(fileIndex);
-                                    _platformFile.removeAt(fileIndex);
-                                  });
-                                },
-                                child: const Icon(
-                                  Icons.cancel,
-                                  color: Colors.grey,
-                                  size: 30.0,
-                                ))),
-                      )
-                    ],
-                  ),
-                ),
+                ...files.map((file) => getGestureButtonWithIcon(file)),
                 Container(
                   height: 100.0,
                   width: 100.0,
@@ -369,7 +416,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                 if (element.extension == 'pdf') {
                                   files.add("filepdf##${element.path}");
                                 } else {
-                                  files.add(element.path.toString());
+                                  files.add("fileimage##${element.path}");
                                 }
                                 //print(files);
                                 _platformFile.add(element);
@@ -393,7 +440,22 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                     data: "Maximum 7 files can be added")
                                 .showSnackBar(context);
                           } else {
-                            files.add(file.path.toString());
+                            files.add("fileimage##${file.path}");
+                            _platformFile.add(file);
+                          }
+                        });
+                      }
+
+                      if (filesList != null &&
+                          filesList[0]['name'] == "audio") {
+                        final file = filesList[0]["data"];
+                        setState(() {
+                          if (files.length == 7) {
+                            const CustomSnackBar(
+                                    data: "Maximum 7 files can be added")
+                                .showSnackBar(context);
+                          } else {
+                            files.add("fileaudio##$file");
                             _platformFile.add(file);
                           }
                         });

@@ -27,11 +27,10 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        return android;
-      // throw UnsupportedError(
-      //   'DefaultFirebaseOptions have not been configured for windows - '
-      //   'you can reconfigure this by running the FlutterFire CLI again.',
-      // );
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -45,42 +44,41 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD7jglBnDtvhpN_4npa_lo2cfftJfHvaNU',
-    appId: '1:106652086885:web:530126f36936206eb90c8c',
-    messagingSenderId: '106652086885',
-    projectId: 'swifttrack-dam-27fda',
-    authDomain: 'swifttrack-dam-27fda.firebaseapp.com',
-    storageBucket: 'swifttrack-dam-27fda.appspot.com',
-    measurementId: 'G-1XG9JSQSFD',
+    apiKey: 'AIzaSyBG1zqQRrBvMcKO9xf5h7WpQnw3-WLa-7Q',
+    appId: '1:104022790962:web:bd35e9991b7159bce63d2b',
+    messagingSenderId: '104022790962',
+    projectId: 'swifttracklocal',
+    authDomain: 'swifttracklocal.firebaseapp.com',
+    storageBucket: 'swifttracklocal.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBKvQ_o0l0tRs-Go60eGijm54nCqBYsYsA',
-    appId: '1:106652086885:android:d433a1e75f738505b90c8c',
-    messagingSenderId: '106652086885',
-    projectId: 'swifttrack-dam-27fda',
-    storageBucket: 'swifttrack-dam-27fda.appspot.com',
+    apiKey: 'AIzaSyA8n5nHahU0rFP5y7UuHnMN5lK2Qtsr5Vs',
+    appId: '1:104022790962:android:79252509b4209515e63d2b',
+    messagingSenderId: '104022790962',
+    projectId: 'swifttracklocal',
+    storageBucket: 'swifttracklocal.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDo4joesz2t8luJMm7gy320E0emhLk8yhI',
-    appId: '1:106652086885:ios:7dbbd86b1fd0a30db90c8c',
-    messagingSenderId: '106652086885',
-    projectId: 'swifttrack-dam-27fda',
-    storageBucket: 'swifttrack-dam-27fda.appspot.com',
+    apiKey: 'AIzaSyDqjNTVr3DLTh6tWVJ8YUXQnYqs0UVaXKQ',
+    appId: '1:104022790962:ios:c00b4ec25e3c0163e63d2b',
+    messagingSenderId: '104022790962',
+    projectId: 'swifttracklocal',
+    storageBucket: 'swifttracklocal.appspot.com',
     iosClientId:
-        '106652086885-6qs5q0n2mgqucnp9o0v865dsfmitj6ll.apps.googleusercontent.com',
+        '104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com',
     iosBundleId: 'com.example.swifttrack',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDo4joesz2t8luJMm7gy320E0emhLk8yhI',
-    appId: '1:106652086885:ios:7dbbd86b1fd0a30db90c8c',
-    messagingSenderId: '106652086885',
-    projectId: 'swifttrack-dam-27fda',
-    storageBucket: 'swifttrack-dam-27fda.appspot.com',
+    apiKey: 'AIzaSyDqjNTVr3DLTh6tWVJ8YUXQnYqs0UVaXKQ',
+    appId: '1:104022790962:ios:c00b4ec25e3c0163e63d2b',
+    messagingSenderId: '104022790962',
+    projectId: 'swifttracklocal',
+    storageBucket: 'swifttracklocal.appspot.com',
     iosClientId:
-        '106652086885-6qs5q0n2mgqucnp9o0v865dsfmitj6ll.apps.googleusercontent.com',
+        '104022790962-a0s3ag0a5v96soo8i0ud37mj94t1m83r.apps.googleusercontent.com',
     iosBundleId: 'com.example.swifttrack',
   );
 }

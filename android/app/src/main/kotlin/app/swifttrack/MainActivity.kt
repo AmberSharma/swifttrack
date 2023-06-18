@@ -1,4 +1,4 @@
-package com.example.swifttrack
+package app.swifttrack
 
 import io.flutter.embedding.android.FlutterActivity
 
