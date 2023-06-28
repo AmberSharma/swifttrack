@@ -10,6 +10,7 @@ import 'package:swifttrack/model/assessment.dart';
 import 'package:swifttrack/model/assessment_list.dart';
 import 'package:swifttrack/module.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -20,6 +21,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<Assessment> assessmentListItems = [];
+
+  String logo = '';
+  String? uuid;
 
   @override
   void initState() {
@@ -77,12 +81,20 @@ class _HomeState extends State<Home> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SvgPicture.network(
-                'https://swifttrack.app/assets/img/swifttrack-logo.svg',
-                fit: BoxFit.contain,
-                height: 60,
-                width: 80,
-              ),
+              logo.isNotEmpty
+                  ? Image.network(
+                      logo,
+                      fit: BoxFit.contain,
+                      height: 80,
+                      width: 120,
+                    )
+                  : Container()
+              // SvgPicture.network(
+              //   'https://swifttrack.app/assets/img/swifttrack-logo.svg',
+              //   fit: BoxFit.contain,
+              //   height: 60,
+              //   width: 80,
+              // ),
             ],
           ),
           // title: Padding(
@@ -92,6 +104,64 @@ class _HomeState extends State<Home> {
           //     fit: BoxFit.fill,
           //   ),
           // ),
+          actions: <Widget>[
+            PopupMenuButton(
+                // add icon, by default "3 dot" icon
+                icon: const Icon(
+                  Icons.person,
+                  color: Colors.black,
+                ),
+                itemBuilder: (context) {
+                  return [
+                    const PopupMenuItem<int>(
+                      value: 0,
+                      child: Text(BaseConstants.viewProgressLabel),
+                    ),
+                    const PopupMenuItem<int>(
+                      value: 1,
+                      child: Text(BaseConstants.viewProfileLabel),
+                    ),
+                    const PopupMenuItem<int>(
+                      value: 2,
+                      child: Text(BaseConstants.logoutLabel),
+                    ),
+                  ];
+                },
+                onSelected: (value) async {
+                  if (value == 0) {
+                    var intermediateUrl =
+                        BaseConstants.baseWebUrl + BaseConstants.progressUrl;
+                    final url = Uri.parse(
+                      intermediateUrl.replaceAll("{user_id}", uuid!),
+                    );
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url);
+                    }
+                  } else if (value == 1) {
+                    var intermediateUrl =
+                        BaseConstants.baseWebUrl + BaseConstants.progressUrl;
+                    final url = Uri.parse(
+                      intermediateUrl.replaceAll("{user_id}", uuid!),
+                    );
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url);
+                    }
+                  } else if (value == 2) {
+                    SharedPreferences preferences =
+                        await SharedPreferences.getInstance();
+                    await preferences.clear();
+
+                    if (!mounted) return;
+
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => const Login(),
+                      ),
+                      (Route route) => false,
+                    );
+                  }
+                }),
+          ],
         ),
         body: TabBarView(
           children: [
@@ -387,7 +457,9 @@ class _HomeState extends State<Home> {
 
   void getDashboardInfo() async {
     var prefs = await SharedPreferences.getInstance();
-    var uuid = prefs.getString(BaseConstants.uuid)!;
+    uuid = prefs.getString(BaseConstants.uuid)!;
+    logo = prefs.getString("logo")!;
+
     var url = "${BaseConstants.baseUrl}${BaseConstants.getDashboardUrl}$uuid/";
     http.Response response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {

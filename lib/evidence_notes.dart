@@ -218,11 +218,9 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                   height: 50.0,
                   decoration: const BoxDecoration(color: Colors.blue),
                   child: const Center(
-                    child: Flexible(
-                      child: Text(
-                        "1.1 Use reliable, up to date information to plan tug operations",
-                        style: TextStyle(fontSize: 18),
-                      ),
+                    child: Text(
+                      "1.1 Use reliable, up to date information to plan tug operations",
+                      style: TextStyle(fontSize: 18),
                     ),
                   ),
                 ),
@@ -478,8 +476,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 10.0, horizontal: 15.0),
                             child: Text(
-                              widget.note[index].content +
-                                  "Check out the Flutter API docs to customize icon size and color. Check out the Flutter API docs to customize icon size and color.",
+                              "${widget.note[index].content}Check out the Flutter API docs to customize icon size and color. Check out the Flutter API docs to customize icon size and color.",
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w400,
