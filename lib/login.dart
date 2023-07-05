@@ -19,6 +19,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  String? _accountname;
   String? _username;
   String? _password;
 
@@ -42,6 +43,39 @@ class _LoginState extends State<Login> {
           ),
         ),
       ),
+    );
+
+    final accountname = TextFormField(
+      textAlign: TextAlign.center,
+      autofocus: false,
+      keyboardType: TextInputType.text,
+      decoration: InputDecoration(
+        hintText: "Account name",
+        contentPadding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+          borderSide: const BorderSide(width: 1, color: Color(0xffd8d8d8)),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(width: 1, color: Colors.green),
+          borderRadius: BorderRadius.circular(25.0),
+        ),
+      ),
+      onSaved: (String? value) {
+        setState(() {
+          _accountname = value;
+        });
+      },
+      validator: (String? value) {
+        if (value!.isEmpty) {
+          return "Account name is required";
+        }
+
+        return null;
+      },
     );
 
     final username = TextFormField(
@@ -258,6 +292,10 @@ class _LoginState extends State<Login> {
                       logo,
                       const SizedBox(
                         height: 48.0,
+                      ),
+                      accountname,
+                      const SizedBox(
+                        height: 8.0,
                       ),
                       username,
                       const SizedBox(

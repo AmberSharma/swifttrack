@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 class ImageDetailScreen extends StatelessWidget {
   final String imageUrl;
+  final String imageType;
 
-  const ImageDetailScreen({super.key, required this.imageUrl});
+  const ImageDetailScreen(
+      {super.key, required this.imageUrl, required this.imageType});
 
   @override
   Widget build(BuildContext context) {
@@ -15,9 +17,11 @@ class ImageDetailScreen extends StatelessWidget {
         child: Center(
           child: Hero(
             tag: 'imageHero',
-            child: Image.file(
-              File(imageUrl),
-            ),
+            child: imageType == "internal"
+                ? Image.file(
+                    File(imageUrl),
+                  )
+                : Image.network(imageUrl),
           ),
         ),
         onTap: () {

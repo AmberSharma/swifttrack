@@ -38,6 +38,7 @@ class _ModuleState extends State<Module> {
   List levelColor = [];
   String dropdownValue = list.first;
   final List<String> items = List<String>.generate(8, (i) => 'Item $i');
+  bool additionalFlag = true;
 
   List changedSections = [];
 
@@ -88,8 +89,12 @@ class _ModuleState extends State<Module> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text('Tabs Demo'),
+        backgroundColor: const Color.fromARGB(255, 38, 126, 199),
+        //title: const Text('Tabs Demo'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: <Widget>[
           Padding(
             padding: const EdgeInsets.fromLTRB(8.0, 0.0, 20.0, 0.0),
@@ -163,7 +168,15 @@ class _ModuleState extends State<Module> {
                   print(error);
                 }
               },
-              child: const Text('Save'),
+              child: Row(
+                children: const [
+                  Text(
+                    'Save',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  Icon(Icons.check, color: Colors.white),
+                ],
+              ),
             ),
           ),
         ],
@@ -233,6 +246,10 @@ class _ModuleState extends State<Module> {
                         ),
                       ),
                     ] else ...[
+                      if (moduleElementListItems[index].type == "additional" &&
+                          additionalFlag) ...[
+                        additionalSection(),
+                      ],
                       Row(
                         children: [
                           Expanded(
@@ -674,6 +691,114 @@ class _ModuleState extends State<Module> {
           fontWeight: moduleElementListItem.setLevel.toString() != element.level
               ? FontWeight.normal
               : FontWeight.bold),
+    );
+  }
+
+  additionalSection() {
+    // additionalFlag = false;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12.0, 7.0, 12.0, 5.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Additional Tasks",
+              style: TextStyle(
+                fontSize: 22.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+                border: Border.all(
+                  color: const Color.fromARGB(255, 111, 26, 20),
+                ),
+                borderRadius: const BorderRadius.all(Radius.circular(10))),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  const Text(
+                    "Additional Tasks Description this is testign abfvbf asff hjaf",
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      // fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blueAccent,
+                      // padding: const EdgeInsets.all(16.0),
+                      textStyle: const TextStyle(fontSize: 20),
+                    ),
+                    onPressed: () {
+                      _dialogBuilder(context);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: const [
+                        Text('Add Task'),
+                        Icon(Icons.add_task, color: Colors.blueAccent),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _dialogBuilder(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Additional Task'),
+          content: const TextField(
+            keyboardType: TextInputType.multiline,
+            minLines: 2, //Normal textInputField will be displayed
+            maxLines: 5,
+          ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [
+                      Text('Save'),
+                      Icon(Icons.check, color: Colors.blueAccent),
+                    ],
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }

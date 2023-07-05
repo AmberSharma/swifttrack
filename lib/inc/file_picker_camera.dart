@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:swifttrack/classes/flutter_camera.dart';
 import 'package:swifttrack/classes/sound_recorder.dart';
 import 'package:swifttrack/inc/base_constants.dart';
+// import 'package:flutter_camera/flutter_camera.dart';
 // import 'package:lumineux_rewards_app/common/AppBarAction.dart';
 
 // import 'BaseConstants.dart';
@@ -159,17 +163,27 @@ class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
                               iconSize: 75.0,
                               color: Colors.white,
                               onPressed: () async {
-                                final XFile? photo = await ImagePicker()
-                                    .pickImage(source: ImageSource.camera);
+                                // final XFile? photo = await ImagePicker()
+                                //     .pickImage(source: ImageSource.camera);
 
-                                if (photo != null) {
-                                  List filesList = [
-                                    {"name": "camera", "data": photo}
-                                  ];
+                                // if (photo != null) {
+                                //   List filesList = [
+                                //     {"name": "camera", "data": photo}
+                                //   ];
 
-                                  if (!mounted) return;
-                                  Navigator.pop(context, filesList);
-                                }
+                                //   if (!mounted) return;
+                                //   Navigator.pop(context, filesList);
+                                // }
+
+                                // Navigator.of(context).push(
+                                //   MaterialPageRoute(
+                                //     builder: (BuildContext context) {
+                                //       return const FlutterCameraPage();
+                                //     },
+                                //   ),
+                                // );
+
+                                _navigateAndDisplaySelection(context);
                               },
                             ),
                             const Text(
@@ -196,5 +210,23 @@ class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
         ),
       ),
     );
+  }
+
+  Future<dynamic> _navigateAndDisplaySelection(BuildContext context) async {
+    // Navigator.push returns a Future that completes after calling
+    // Navigator.pop on the Selection Screen.
+    var result = await Navigator.push(
+      context,
+      // Create the SelectionScreen in the next step.
+      MaterialPageRoute(builder: (context) => const FlutterCameraPage()),
+    ).then((value) {
+      print(value);
+    });
+
+    if (!mounted) return;
+
+    print(result);
+
+    //Navigator.pop(context, "mnop");
   }
 }

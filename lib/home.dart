@@ -8,8 +8,11 @@ import 'package:swifttrack/inc/base_constants.dart';
 import 'package:swifttrack/login.dart';
 import 'package:swifttrack/model/assessment.dart';
 import 'package:swifttrack/model/assessment_list.dart';
+import 'package:swifttrack/model/categories.dart';
+import 'package:swifttrack/model/resource_list.dart';
 import 'package:swifttrack/module.dart';
 import 'package:http/http.dart' as http;
+import 'package:swifttrack/resource_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Home extends StatefulWidget {
@@ -21,6 +24,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<Assessment> assessmentListItems = [];
+  List<Categories> resourcesListItems = [];
 
   String logo = '';
   String? uuid;
@@ -29,6 +33,7 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     getDashboardInfo();
+    getResourcesInfo();
   }
 
   @override
@@ -399,56 +404,58 @@ class _HomeState extends State<Home> {
                   const Divider(),
               itemCount: ['A', 'B', 'C'].length,
             ),
-            Accordion(
-              maxOpenSections: 1,
-              contentBorderColor: Colors.black,
-              headerBackgroundColor: Colors.grey,
-              headerBorderRadius: 1,
-              contentBorderRadius: 1,
-              // headerTextStyle: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-              // leftIcon: const Icon(Icons.audiotrack, color: Colors.white),
-              children: [
-                AccordionSection(
-                  isOpen: false,
-                  header: const Text('Introduction: Using the app',
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold)),
-                  content:
-                      const Text('This is the introduction right here ...'),
-                ),
-                AccordionSection(
-                  isOpen: true,
-                  header: const Text('Evidence required',
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold)),
-                  content: ListView.separated(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.all(8),
-                    itemCount: ['A', 'B', 'C'].length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Container(
-                        height: 50,
-                        color: Colors.amber,
-                        child: const Center(child: Text('Entry')),
-                      );
-                    },
-                    separatorBuilder: (BuildContext context, int index) =>
-                        const Divider(),
-                  ),
-                ),
-                // AccordionSection(
-                //   isOpen: true,
-                //   header: const Text('Company Info',
-                //       style: TextStyle(color: Colors.white, fontSize: 17)),
-                //   content:
-                //       Icon(Icons.airplay, size: 70, color: Colors.green[200]),
-                // ),
-              ],
-            ),
+            // Accordion(
+            //   maxOpenSections: 1,
+            //   contentBorderColor: Colors.black,
+            //   headerBackgroundColor: Colors.grey,
+            //   headerBorderRadius: 1,
+            //   contentBorderRadius: 1,
+            //   // headerTextStyle: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+            //   // leftIcon: const Icon(Icons.audiotrack, color: Colors.white),
+            //   children: [
+            //     getResourcesWidget(),
+            //     AccordionSection(
+            //       isOpen: false,
+            //       header: const Text('Introduction: Using the app',
+            //           style: TextStyle(
+            //               color: Colors.black,
+            //               fontSize: 17,
+            //               fontWeight: FontWeight.bold)),
+            //       content:
+            //           const Text('This is the introduction right here ...'),
+            //     ),
+            //     AccordionSection(
+            //       isOpen: true,
+            //       header: const Text('Evidence required',
+            //           style: TextStyle(
+            //               color: Colors.black,
+            //               fontSize: 17,
+            //               fontWeight: FontWeight.bold)),
+            //       content: ListView.separated(
+            //         shrinkWrap: true,
+            //         padding: const EdgeInsets.all(8),
+            //         itemCount: ['A', 'B', 'C'].length,
+            //         itemBuilder: (BuildContext context, int index) {
+            //           return Container(
+            //             height: 50,
+            //             color: Colors.amber,
+            //             child: const Center(child: Text('Entry')),
+            //           );
+            //         },
+            //         separatorBuilder: (BuildContext context, int index) =>
+            //             const Divider(),
+            //       ),
+            //     ),
+            //     // AccordionSection(
+            //     //   isOpen: true,
+            //     //   header: const Text('Company Info',
+            //     //       style: TextStyle(color: Colors.white, fontSize: 17)),
+            //     //   content:
+            //     //       Icon(Icons.airplay, size: 70, color: Colors.green[200]),
+            //     // ),
+            //   ],
+            // ),
+            getResourcesWidget(),
           ],
         ),
       ),
@@ -457,10 +464,12 @@ class _HomeState extends State<Home> {
 
   void getDashboardInfo() async {
     var prefs = await SharedPreferences.getInstance();
+    //prefs.clear();
     uuid = prefs.getString(BaseConstants.uuid)!;
     logo = prefs.getString("logo")!;
 
     var url = "${BaseConstants.baseUrl}${BaseConstants.getDashboardUrl}$uuid/";
+    print(url);
     http.Response response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var responseData = jsonDecode(response.body);
@@ -494,5 +503,149 @@ class _HomeState extends State<Home> {
         (Route route) => false,
       );
     }
+  }
+
+  getResourcesInfo() async {
+    var prefs = await SharedPreferences.getInstance();
+    //prefs.clear();
+    uuid = prefs.getString(BaseConstants.uuid)!;
+
+    var url = "${BaseConstants.baseUrl}${BaseConstants.getResourcesUrl}$uuid/";
+    print(url);
+    http.Response response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      print(responseData);
+
+      if (responseData["status"] == "error") {
+        // Navigator.of(context).pushAndRemoveUntil(
+        //   MaterialPageRoute(
+        //     builder: (BuildContext context) {
+        //       return const Login();
+        //     },
+        //   ),
+        //   (Route route) => false,
+        // );
+      } else {
+        final resourcesList =
+            ResourceList.fromJson(responseData["data"]["categories"]);
+
+        setState(() {
+          resourcesListItems = resourcesList.categories;
+        });
+      }
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (BuildContext context) {
+            return const Login();
+          },
+        ),
+        (Route route) => false,
+      );
+    }
+  }
+
+  getResourcesWidget() {
+    return Accordion(
+      maxOpenSections: 1,
+      contentBorderColor: Colors.black,
+      headerBackgroundColor: Colors.blueGrey,
+      headerBorderRadius: 1,
+      contentBorderRadius: 1,
+      // headerTextStyle: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+      // leftIcon: const Icon(Icons.audiotrack, color: Colors.white),
+      children: [
+        for (int i = 0; i < resourcesListItems.length; i++)
+          AccordionSection(
+            isOpen: false,
+            header: Text(resourcesListItems[i].name,
+                style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold)),
+            content: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int j = 0;
+                    j < resourcesListItems[i].resource.length;
+                    j++) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: InkWell(
+                      onTap: () {
+                        print('Text Clicked');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ResourceItem(
+                              resourceName:
+                                  resourcesListItems[i].resource[j].name,
+                              resourceElement: resourcesListItems[i]
+                                  .resource[j]
+                                  .resourceElement,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            resourcesListItems[i].resource[j].name,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.bold),
+                          )),
+                    ),
+                  ),
+                  (j + 1 != resourcesListItems[i].resource.length)
+                      ? const Divider(color: Colors.black)
+                      : Container(),
+                ],
+                // Text(resourcesListItems[i].resource[j].name),
+              ],
+            ),
+          ),
+
+        // AccordionSection(
+        //   isOpen: false,
+        //   header: const Text('Introduction: Using the app',
+        //       style: TextStyle(
+        //           color: Colors.black,
+        //           fontSize: 17,
+        //           fontWeight: FontWeight.bold)),
+        //   content: const Text('This is the introduction right here ...'),
+        // ),
+        // AccordionSection(
+        //   isOpen: true,
+        //   header: const Text('Evidence required',
+        //       style: TextStyle(
+        //           color: Colors.black,
+        //           fontSize: 17,
+        //           fontWeight: FontWeight.bold)),
+        //   content: ListView.separated(
+        //     shrinkWrap: true,
+        //     padding: const EdgeInsets.all(8),
+        //     itemCount: ['A', 'B', 'C'].length,
+        //     itemBuilder: (BuildContext context, int index) {
+        //       return Container(
+        //         height: 50,
+        //         color: Colors.amber,
+        //         child: const Center(child: Text('Entry')),
+        //       );
+        //     },
+        //     separatorBuilder: (BuildContext context, int index) =>
+        //         const Divider(),
+        //   ),
+        // ),
+        // AccordionSection(
+        //   isOpen: true,
+        //   header: const Text('Company Info',
+        //       style: TextStyle(color: Colors.white, fontSize: 17)),
+        //   content:
+        //       Icon(Icons.airplay, size: 70, color: Colors.green[200]),
+        // ),
+      ],
+    );
   }
 }

@@ -17,11 +17,15 @@ class BaseConstants {
 
   static const baseUrl = "https://api.swifttrack.app/";
   static const baseWebUrl = "https://swifttrack.app/";
+  static const firebaseStoragePath =
+      "https://firebasestorage.googleapis.com/v0/b/swifttrack-dam-27fda.appspot.com/o/";
+  static const firebaseFileAlt = "?alt=media";
   static const getInfoUrl = "get/user-info/";
   static const getDashboardUrl = "get/dashboard/";
   static const getModuleUrl = "get/module/";
+  static const getResourcesUrl = "get/resources/";
 
-  static const progressUrl = "progress/{user_id}/template/x";
+  static const progressUrl = "progress/{user_id}/template/";
 
   // Fields
   static const uuid = "uuid";
@@ -32,4 +36,7 @@ class BaseConstants {
 
   // Random
   static const userModule = "user_module";
+
+  //Dropdown
+  static const imageType = {"INTERNAL": "internal", "EXTERNAL": "external"};
 }

@@ -9,12 +9,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swifttrack/classes/video_player.dart';
 // import 'package:swifttrack/classes/sound_recorder.dart';
 import 'package:swifttrack/image_detail_screen.dart';
 import 'package:swifttrack/inc/base_constants.dart';
 import 'package:swifttrack/model/evidence.dart';
 import 'package:swifttrack/model/note.dart';
 import 'package:swifttrack/pdf_detail_screen.dart';
+import 'package:video_player/video_player.dart';
 
 import 'inc/custom_snack_bar.dart';
 import 'inc/file_picker_camera.dart';
@@ -40,6 +42,7 @@ class EvidenceNotes extends StatefulWidget {
 class _EvidenceNotesState extends State<EvidenceNotes> {
   List files = [];
   late final List _platformFile;
+  late VideoPlayerController videoController;
   final FirebaseAuth auth = FirebaseAuth.instance;
   final _firebaseStorage = FirebaseStorage.instance;
   AudioPlayer player = AudioPlayer();
@@ -116,6 +119,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
             builder: (_) {
               return ImageDetailScreen(
                 imageUrl: imagePath,
+                imageType: "internal",
               );
             },
           ),
@@ -152,6 +156,27 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
         ),
         onTap: () async {
           await player.play(DeviceFileSource(file.split("##")[1]));
+        },
+      );
+    }
+
+    if (file.indexOf('video##') != -1) {
+      gestureButton = GestureDetector(
+        child: const Icon(
+          Icons.video_call,
+          size: 50,
+        ),
+        onTap: () async {
+          var result = await Navigator.push(
+            context,
+            // Create the SelectionScreen in the next step.
+            MaterialPageRoute(
+                builder: (context) => VideoPlayerScreen(
+                      videoUrl: file.split("##")[1],
+                    )),
+          );
+
+          //await player.play(DeviceFileSource(file.split("##")[1]));
           // await player.play(
           //   file.split("##")[1],
           // );
@@ -353,7 +378,15 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                     print(error);
                   }
                 },
-                child: const Text('Save'),
+                child: Row(
+                  children: const [
+                    Text(
+                      'Save',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Icon(Icons.check, color: Colors.white),
+                  ],
+                ),
               ),
             ),
           ],
@@ -395,7 +428,8 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
 
                       final filesList = await showCustomDialogPopup<String?>(
                           context, const FilePickerOrCamera());
-                      // print(filesList);
+
+                      print(filesList);
                       if (filesList != null &&
                           filesList[0]['name'] == "file" &&
                           filesList[0]["data"] != null) {
@@ -430,7 +464,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                       }
 
                       if (filesList != null &&
-                          filesList[0]['name'] == "camera") {
+                          filesList[0]['name'] == "camera-photo") {
                         final file = filesList[0]["data"];
                         setState(() {
                           if (files.length == 7) {
@@ -439,6 +473,21 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                 .showSnackBar(context);
                           } else {
                             files.add("fileimage##${file.path}");
+                            _platformFile.add(file);
+                          }
+                        });
+                      }
+
+                      if (filesList != null &&
+                          filesList[0]['name'] == "camera-video") {
+                        final file = filesList[0]["data"];
+                        setState(() {
+                          if (files.length == 7) {
+                            const CustomSnackBar(
+                                    data: "Maximum 7 files can be added")
+                                .showSnackBar(context);
+                          } else {
+                            files.add("filevideo##${file.path}");
                             _platformFile.add(file);
                           }
                         });
