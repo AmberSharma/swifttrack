@@ -20,6 +20,7 @@ class BaseConstants {
   static const firebaseStoragePath =
       "https://firebasestorage.googleapis.com/v0/b/swifttrack-dam-27fda.appspot.com/o/";
   static const firebaseFileAlt = "?alt=media";
+  static const firebaseParticipants = "participants";
   static const getInfoUrl = "get/user-info/";
   static const getDashboardUrl = "get/dashboard/";
   static const getModuleUrl = "get/module/";
@@ -33,10 +34,17 @@ class BaseConstants {
 
   // Firebase Table
   static const userModuleSettings = "user_module_settings";
+  static const moduleTasks = "module_tasks";
 
   // Random
   static const userModule = "user_module";
 
   //Dropdown
   static const imageType = {"INTERNAL": "internal", "EXTERNAL": "external"};
+
+  //File Type
+  static const filePdf = "filepdf";
+  static const fileImage = "fileimage";
+  static const fileVideo = "filevideo";
+  static const fileAudio = "fileaudio";
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swifttrack/evidence_notes.dart';
@@ -14,6 +15,7 @@ import 'package:swifttrack/model/module_element.dart';
 import 'inc/base_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_html/flutter_html.dart';
+import 'package:uuid/uuid.dart';
 
 const List<String> list = <String>['One', 'Two', 'Three', 'Four'];
 
@@ -32,15 +34,20 @@ class Module extends StatefulWidget {
 }
 
 class _ModuleState extends State<Module> {
+  bool? waitingForApiResponse = false;
+
   final FirebaseAuth auth = FirebaseAuth.instance;
   List<ModuleElement> moduleElementListItems = [];
   List<ModuleLevel> moduleLevelListItems = [];
   List levelColor = [];
   String dropdownValue = list.first;
   final List<String> items = List<String>.generate(8, (i) => 'Item $i');
-  bool additionalFlag = true;
+  int additionalFlag = 1;
 
   List changedSections = [];
+
+  TextEditingController taskDescriptionController = TextEditingController();
+  TextEditingController taskPointController = TextEditingController();
 
   @override
   void initState() {
@@ -52,7 +59,9 @@ class _ModuleState extends State<Module> {
     print(moduleElement.duration);
     print(moduleElement.setDuration);
     var dropdownItems = moduleElement.duration.split(",");
-    dropdownItems.add("");
+    var pointItems = moduleElement.points.split(",");
+    dropdownItems.insert(0, "");
+    pointItems.insert(0, "0");
 
     return SizedBox(
       width: 70.0,
@@ -79,6 +88,13 @@ class _ModuleState extends State<Module> {
         onChanged: (value) {
           setState(() {
             moduleElement.setDuration = value.toString();
+            // if (!changedSections.contains(moduleElement.uuid)) {
+            //   changedSections.add(moduleElement.uuid);
+            // }
+
+            var index = dropdownItems.indexOf(value.toString());
+            print(pointItems[index]);
+            moduleElement.setPoints = int.parse(pointItems[index]);
           });
         },
       ),
@@ -107,60 +123,67 @@ class _ModuleState extends State<Module> {
                     const Settings(persistenceEnabled: false);
 
                 try {
-                  print(changedSections);
-                  for (var item in moduleElementListItems) {
+                  // looping through all the module elements
+                  for (var i = 0; i < moduleElementListItems.length; i++) {
+                    var item = moduleElementListItems[i];
+
+                    // Get inside only if the current element has changed
                     if (item.type != "heading" &&
                         changedSections.contains(item.uuid)) {
+                      // Create an instance of Firebase Module collection
                       CollectionReference collectionRef = FirebaseFirestore
                           .instance
                           .collection(BaseConstants.userModuleSettings);
+
+                      var prefs = await SharedPreferences.getInstance();
 
                       var dateTimeNow = DateFormat('yyyy-MM-dd kk:mm:ss')
                           .format(DateTime.now());
                       Map<String, String> dataToSave = {
                         'duration': item.setDuration.toString(),
                         'record_id': item.uuid,
-                        'user_id': auth.currentUser!.uid,
+                        'firebase_user_id': auth.currentUser!.uid,
+                        'user_id':
+                            prefs.getString(BaseConstants.uuid).toString(),
                         'level': item.setLevel.toString(),
                         'updated': dateTimeNow
                       };
 
-                      var prefs = await SharedPreferences.getInstance();
+                      // SharedPreferences.getInstance().then((data) {
+                      //   data.getKeys().forEach((key) {
+                      //     print(key);
+                      //     print(data.get(key));
+                      //   });
+                      // });
+                      var savedModuleData = jsonDecode(
+                          prefs.getString(BaseConstants.userModule).toString());
 
-                      SharedPreferences.getInstance().then((data) {
-                        data.getKeys().forEach((key) {
-                          print(key);
-                          print(data.get(key));
-                        });
-                      });
-                      var element = jsonDecode(prefs
-                          .getString("${BaseConstants.userModule}_${item.uuid}")
-                          .toString());
-                      print(element);
-                      if (element.containsKey("firebase_collection_id") &&
-                          element["firebase_collection_id"].isNotEmpty) {
+                      if (savedModuleData[i]
+                              .containsKey("firebase_collection_id") &&
+                          savedModuleData[i]["firebase_collection_id"]
+                              .isNotEmpty) {
                         collectionRef
-                            .doc(element["firebase_collection_id"])
+                            .doc(savedModuleData[i]["firebase_collection_id"])
                             .update(dataToSave);
                       } else {
                         DocumentReference docRef =
                             await collectionRef.add(dataToSave);
                         print(docRef.id);
 
-                        element["firebase_collection_id"] = docRef.id;
+                        savedModuleData[i]["firebase_collection_id"] =
+                            docRef.id;
 
                         // prefs.setString(
                         //     "user_module_${item.uuid}", jsonEncode(element));
                       }
 
-                      element["updated"] = dateTimeNow;
-                      element["duration"] = item.setDuration;
-                      element["set_level"] = item.setLevel;
+                      savedModuleData[i]["updated"] = dateTimeNow;
+                      savedModuleData[i]["set_duration"] = item.setDuration;
+                      savedModuleData[i]["set_level"] = item.setLevel;
 
-                      print(element);
-                      prefs.setString(
-                          "${BaseConstants.userModule}_${item.uuid}",
-                          jsonEncode(element));
+                      print(savedModuleData[i]);
+                      prefs.setString(BaseConstants.userModule,
+                          jsonEncode(savedModuleData));
                       //collectionRef.update(dataToSave);
                     }
                   }
@@ -247,7 +270,7 @@ class _ModuleState extends State<Module> {
                       ),
                     ] else ...[
                       if (moduleElementListItems[index].type == "additional" &&
-                          additionalFlag) ...[
+                          additionalFlag == 1) ...[
                         additionalSection(),
                       ],
                       Row(
@@ -319,12 +342,15 @@ class _ModuleState extends State<Module> {
                                                             .note,
                                                   ),
                                                 ),
-                                              );
+                                              ).then((_) {
+                                                getModuleInfo();
+                                                setState(() {});
+                                              });
                                               // }
                                             },
                                           ),
                                           moduleElementListItems[index]
-                                                  .note
+                                                  .evidence
                                                   .isNotEmpty
                                               ? Positioned(
                                                   left: 22,
@@ -346,7 +372,7 @@ class _ModuleState extends State<Module> {
                                                     child: Text(
                                                       moduleElementListItems[
                                                               index]
-                                                          .note
+                                                          .evidence
                                                           .length
                                                           .toString(),
                                                       style: const TextStyle(
@@ -397,12 +423,15 @@ class _ModuleState extends State<Module> {
                                                             .note,
                                                   ),
                                                 ),
-                                              );
+                                              ).then((_) {
+                                                getModuleInfo();
+                                                setState(() {});
+                                              });
                                               // }
                                             },
                                           ),
                                           moduleElementListItems[index]
-                                                  .evidence
+                                                  .note
                                                   .isNotEmpty
                                               ? Positioned(
                                                   left: 22,
@@ -424,7 +453,7 @@ class _ModuleState extends State<Module> {
                                                     child: Text(
                                                       moduleElementListItems[
                                                               index]
-                                                          .evidence
+                                                          .note
                                                           .length
                                                           .toString(),
                                                       style: const TextStyle(
@@ -454,8 +483,7 @@ class _ModuleState extends State<Module> {
                                         const SizedBox(
                                           width: 10,
                                         ),
-                                        moduleElementListItems[index]
-                                                    .duration ==
+                                        moduleElementListItems[index].points ==
                                                 ""
                                             ? Container()
                                             : Text(
@@ -575,9 +603,8 @@ class _ModuleState extends State<Module> {
   void getModuleInfo() async {
     print(widget.moduleUUID);
     var prefs = await SharedPreferences.getInstance();
-    // prefs.clear();
-
     var uuid = prefs.getString(BaseConstants.uuid)!;
+
     // ignore: unused_local_variable
     var url =
         "${BaseConstants.baseUrl}${BaseConstants.getModuleUrl}${widget.moduleUUID}/$uuid/1/";
@@ -585,7 +612,9 @@ class _ModuleState extends State<Module> {
     http.Response response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var responseData = jsonDecode(response.body);
-      print(responseData["data"]["elements"]);
+
+      // print(responseData["data"]["elements"]);
+      // print(responseData["data"]["elements"].length);
       //   // var responseData = jsonDecode(
       //   // '{"status":"success","status_msg":"","type":1,"data":{"assessments":[{"name":"Competency name 1","uuid":"2eb97b3a-dcc4-4b18-977b-4926f17c1772","points_target":150,"points_earned":50,"modules":[{"name":"Assessment module 47 Direct tug operations 1","uuid":"5ca1637d-9098-4e9e-90a1-b8ea788c8938","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ff0000","perc":null,"disabled_levels":""},{"name":"Example learning module","uuid":"8f482277-0c5b-4642-b579-dd10456fc5b2","points_target":10,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#2475ad","perc":null,"disabled_levels":""}]},{"name":"Competency name 2","uuid":"a79db0cc-e707-4141-a6a3-1b141deeae98","points_target":100,"points_earned":50,"modules":[{"name":"Another Example learning module 2 name","uuid":"9g982342-3c5b-4642-b579-dd10456fc5b2","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ff6600","perc":null,"disabled_levels":""},{"name":"Assessment module 47 Direct tug operations 2","uuid":"b82785f2-a5a7-4b2c-97b0-16be0d43e5f0","points_target":15,"points_earned":50,"points_spill":0,"prog_1_title":"Aware","prog_1_color":"#f0c600","prog_1_count":5,"prog_2_title":"Progressing","prog_2_color":"#2475ad","prog_2_count":2,"prog_3_title":"Satisfactory","prog_3_color":"#67b931","prog_3_count":1,"color":"#ccff73","perc":null,"disabled_levels":""}]}]}}');
       if (responseData["status"] == "error") {
@@ -598,49 +627,118 @@ class _ModuleState extends State<Module> {
           (Route route) => false,
         );
       } else {
-        for (int i = 0; i < responseData["data"]["elements"].length; i++) {
-          if (prefs.containsKey(
-              '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}')) {
-            var specificModuleData = jsonDecode(prefs
-                .getString(
-                    '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}')
-                .toString());
+        if (!prefs.containsKey(BaseConstants.userModule)) {
+          prefs.setString(BaseConstants.userModule,
+              jsonEncode(responseData["data"]["elements"]));
+        }
 
-            specificModuleData["updated"] = specificModuleData["updated"] ??
-                specificModuleData["created"] ??
+        var savedModuleData =
+            jsonDecode(prefs.getString(BaseConstants.userModule).toString());
+
+        var serverElementData = responseData["data"]["elements"];
+        for (int i = 0; i < serverElementData.length; i++) {
+          var itemIndex = savedModuleData
+              .indexWhere((e) => e['uuid'] == serverElementData[i]['uuid']);
+
+          if (itemIndex == -1) {
+            savedModuleData.insert(i, serverElementData[i]);
+            itemIndex = i;
+          }
+          if (savedModuleData[itemIndex].isNotEmpty) {
+            // Set updated date to created date if not set
+            // Else set to current date if both are not set
+            savedModuleData[itemIndex]["updated"] = savedModuleData[itemIndex]
+                    ["updated"] ??
+                savedModuleData[itemIndex]["created"] ??
                 DateFormat('yyyy-MM-dd kk:mm:ss').format(DateTime.now());
-            responseData["data"]["elements"][i]["updated"] =
-                responseData["data"]["elements"][i]["updated"] ??
-                    responseData["data"]["elements"][i]["created"];
 
-            if (responseData["data"]["elements"][i]["updated"] == null ||
-                DateTime.parse(specificModuleData["updated"]).isAfter(
-                    DateTime.parse(
-                        responseData["data"]["elements"][i]["updated"]))) {
-              responseData["data"]["elements"][i] = specificModuleData;
+            serverElementData[i]["updated"] = serverElementData[i]["updated"] ??
+                serverElementData[i]["created"];
+
+            if (serverElementData[i]["updated"] == null ||
+                DateTime.parse(savedModuleData[itemIndex]["updated"])
+                    .isAfter(DateTime.parse(serverElementData[i]["updated"]))) {
+              serverElementData[i] = savedModuleData[itemIndex];
+
+              if (savedModuleData[itemIndex]["evidence"] != null) {
+                for (int k = 0;
+                    k < savedModuleData[itemIndex]["evidence"].length;
+                    k++) {
+                  print(savedModuleData[itemIndex]["evidence"][k]);
+                }
+              }
             } else {
-              if (specificModuleData.containsKey("firebase_collection_id") &&
-                  specificModuleData["firebase_collection_id"].isNotEmpty) {
+              if (savedModuleData[itemIndex]
+                      .containsKey("firebase_collection_id") &&
+                  savedModuleData[itemIndex]["firebase_collection_id"]
+                      .isNotEmpty) {
                 FirebaseFirestore.instance
                     .collection(BaseConstants.userModuleSettings)
-                    .doc(specificModuleData["firebase_collection_id"])
+                    .doc(savedModuleData[itemIndex]["firebase_collection_id"])
                     .delete();
               }
-              specificModuleData = responseData["data"]["elements"][i];
+              savedModuleData[itemIndex] = responseData["data"]["elements"][i];
 
               prefs.setString(
-                  '${BaseConstants.userModule}_${specificModuleData["uuid"]}',
-                  jsonEncode(specificModuleData));
+                  BaseConstants.userModule, jsonEncode(savedModuleData));
             }
           } else {
+            savedModuleData.insert(i, serverElementData);
             prefs.setString(
-                '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}',
-                jsonEncode(responseData["data"]["elements"][i]));
+                BaseConstants.userModule, jsonEncode(savedModuleData));
           }
         }
 
-        final moduleElementList =
-            ElementList.fromJson(responseData["data"]["elements"]);
+        // for (int i = 0; i < responseData["data"]["elements"].length; i++) {
+        //   if (prefs.containsKey(
+        //       '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}')) {
+        //     var specificModuleData = jsonDecode(prefs
+        //         .getString(
+        //             '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}')
+        //         .toString());
+
+        //     specificModuleData["updated"] = specificModuleData["updated"] ??
+        //         specificModuleData["created"] ??
+        //         DateFormat('yyyy-MM-dd kk:mm:ss').format(DateTime.now());
+        //     responseData["data"]["elements"][i]["updated"] =
+        //         responseData["data"]["elements"][i]["updated"] ??
+        //             responseData["data"]["elements"][i]["created"];
+
+        //     if (responseData["data"]["elements"][i]["updated"] == null ||
+        //         DateTime.parse(specificModuleData["updated"]).isAfter(
+        //             DateTime.parse(
+        //                 responseData["data"]["elements"][i]["updated"]))) {
+        //       responseData["data"]["elements"][i] = specificModuleData;
+        //     } else {
+        //       if (specificModuleData.containsKey("firebase_collection_id") &&
+        //           specificModuleData["firebase_collection_id"].isNotEmpty) {
+        //         FirebaseFirestore.instance
+        //             .collection(BaseConstants.userModuleSettings)
+        //             .doc(specificModuleData["firebase_collection_id"])
+        //             .delete();
+        //       }
+        //       specificModuleData = responseData["data"]["elements"][i];
+
+        //       prefs.setString(
+        //           '${BaseConstants.userModule}_${specificModuleData["uuid"]}',
+        //           jsonEncode(specificModuleData));
+        //     }
+        //   } else {
+        //     prefs.setString(
+        //         '${BaseConstants.userModule}_${responseData["data"]["elements"][i]["uuid"]}',
+        //         jsonEncode(responseData["data"]["elements"][i]));
+        //   }
+        // }
+        // List savedUserModuleArray = [];
+        // prefs
+        //     .getKeys()
+        //     .where((String key) => key.contains(BaseConstants.userModule))
+        //     .map((key) {
+        //   savedUserModuleArray.add(jsonDecode(prefs.getString(key).toString()));
+        // }).toList();
+        //prefs.clear();
+
+        final moduleElementList = ElementList.fromJson(savedModuleData);
         final moduleLevelList =
             LevelList.fromJson(responseData["data"]["levels"]);
 
@@ -695,7 +793,7 @@ class _ModuleState extends State<Module> {
   }
 
   additionalSection() {
-    // additionalFlag = false;
+    additionalFlag = additionalFlag + 1;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12.0, 7.0, 12.0, 5.0),
       child: Column(
@@ -759,45 +857,164 @@ class _ModuleState extends State<Module> {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Additional Task'),
-          content: const TextField(
-            keyboardType: TextInputType.multiline,
-            minLines: 2, //Normal textInputField will be displayed
-            maxLines: 5,
-          ),
-          actions: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  style: TextButton.styleFrom(
-                    textStyle: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  child: const Text('Cancel'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+        return waitingForApiResponse == true
+            ? const SpinKitRing(
+                color: Colors.green,
+              )
+            : AlertDialog(
+                title: const Text('Add Additional Task'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: taskDescriptionController,
+                      decoration:
+                          const InputDecoration(hintText: "Description"),
+                      keyboardType: TextInputType.multiline,
+                      minLines: 2, //Normal textInputField will be displayed
+                      maxLines: 5,
+                    ),
+                    TextField(
+                      controller: taskPointController,
+                      decoration: const InputDecoration(hintText: "Points"),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
                 ),
-                TextButton(
-                  style: TextButton.styleFrom(
-                    textStyle: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  child: Row(
+                actions: <Widget>[
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.end,
-                    children: const [
-                      Text('Save'),
-                      Icon(Icons.check, color: Colors.blueAccent),
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          textStyle: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        child: const Text('Cancel'),
+                        onPressed: () {
+                          taskDescriptionController.clear();
+                          taskPointController.clear();
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          textStyle: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: const [
+                            Text('Save'),
+                            Icon(Icons.check, color: Colors.blueAccent),
+                          ],
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            waitingForApiResponse = true;
+                          });
+                          var prefs = await SharedPreferences.getInstance();
+                          var uuid = prefs.getString(BaseConstants.uuid)!;
+
+                          FirebaseFirestore.instance.settings =
+                              const Settings(persistenceEnabled: false);
+
+                          try {
+                            CollectionReference collectionRef =
+                                FirebaseFirestore.instance
+                                    .collection(BaseConstants.moduleTasks);
+
+                            var dateTimeNow = DateFormat('yyyy-MM-dd kk:mm:ss')
+                                .format(DateTime.now());
+
+                            Map<String, dynamic> dataToSave = {
+                              'uuid': const Uuid().v4().toString(),
+                              "type": "additional",
+                              "label": null,
+                              "content":
+                                  taskDescriptionController.text.toString(),
+                              "duration": null,
+                              "duration_suffix": null,
+                              "points": taskPointController.text.toString(),
+                              "validated": null,
+                              "set_level": null,
+                              "set_points": int.parse(taskPointController.text),
+                              "set_duration": null,
+                              "created": dateTimeNow,
+                              "updated": dateTimeNow,
+                              "creator_uuid": uuid,
+                              "creator_type": null,
+                              'firebase_user_id': auth.currentUser!.uid,
+                            };
+
+                            DocumentReference docRef =
+                                await collectionRef.add(dataToSave);
+                            print(docRef.id);
+
+                            var moduleElement =
+                                ModuleElement.fromJson(dataToSave);
+
+                            setState(() {
+                              var savedModuleData = jsonDecode(prefs
+                                  .getString(BaseConstants.userModule)
+                                  .toString());
+                              savedModuleData.add(dataToSave);
+
+                              prefs.setString(BaseConstants.userModule,
+                                  jsonEncode(savedModuleData));
+                              moduleElementListItems.add(moduleElement);
+                            });
+                            // var prefs = await SharedPreferences.getInstance();
+
+                            // SharedPreferences.getInstance().then((data) {
+                            //   data.getKeys().forEach((key) {
+                            //     print(key);
+                            //     print(data.get(key));
+                            //   });
+                            // });
+                            // var element = jsonDecode(prefs
+                            //     .getString("${BaseConstants.userModule}_${item.uuid}")
+                            //     .toString());
+                            // print(element);
+                            // if (element.containsKey("firebase_collection_id") &&
+                            //     element["firebase_collection_id"].isNotEmpty) {
+                            //   collectionRef
+                            //       .doc(element["firebase_collection_id"])
+                            //       .update(dataToSave);
+                            // } else {
+                            //   DocumentReference docRef =
+                            //       await collectionRef.add(dataToSave);
+                            //   print(docRef.id);
+
+                            //   element["firebase_collection_id"] = docRef.id;
+
+                            //   // prefs.setString(
+                            //   //     "user_module_${item.uuid}", jsonEncode(element));
+                            // }
+
+                            // element["updated"] = dateTimeNow;
+                            // element["duration"] = item.setDuration;
+                            // element["set_level"] = item.setLevel;
+
+                            // print(element);
+                            // prefs.setString(
+                            //     "${BaseConstants.userModule}_${item.uuid}",
+                            //     jsonEncode(element));
+                            // //collectionRef.update(dataToSave);
+
+                            taskDescriptionController.clear();
+                            taskPointController.clear();
+                            Navigator.of(context).pop();
+                            setState(() {
+                              waitingForApiResponse = false;
+                            });
+                          } catch (error) {
+                            print(error);
+                          }
+                        },
+                      ),
                     ],
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            ),
-          ],
-        );
+                ],
+              );
       },
     );
   }

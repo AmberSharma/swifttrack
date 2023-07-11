@@ -63,7 +63,7 @@ class ModuleElement {
         content: data["content"],
         duration: data["duration"] ?? "",
         durationSuffix: data["duration_suffix"],
-        points: data["points"] ?? "",
+        points: data["points"].toString(),
         setPoints: data["set_points"] ?? 0,
         setLevel: data["set_level"],
         setDuration:

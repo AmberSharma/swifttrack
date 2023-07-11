@@ -1,5 +1,8 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:swifttrack/classes/video_player.dart';
 import 'package:swifttrack/evidence_notes.dart';
 import 'package:swifttrack/image_detail_screen.dart';
 import 'package:swifttrack/inc/base_constants.dart';
@@ -7,6 +10,8 @@ import 'package:swifttrack/model/level.dart';
 import 'package:swifttrack/model/module_element.dart';
 import 'package:swifttrack/model/resource_element.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:swifttrack/pdf_detail_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const List<String> list = <String>['One', 'Two', 'Three', 'Four'];
 
@@ -170,36 +175,86 @@ class _ResourceItemState extends State<ResourceItem> {
           ),
         );
       case "2":
-        return const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Icon(
-            Icons.videocam,
-            color: Colors.black,
-            size: 50,
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            child: const Icon(
+              Icons.videocam,
+              color: Colors.black,
+              size: 50,
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                // Create the SelectionScreen in the next step.
+                MaterialPageRoute(
+                    builder: (context) => VideoPlayerScreen(
+                          videoUrl: BaseConstants.firebaseStoragePath +
+                              mediaUrl +
+                              BaseConstants.firebaseFileAlt,
+                        )),
+              );
+            },
           ),
         );
       case "3":
-        return const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Icon(
-            Icons.play_circle,
-            color: Colors.black,
-            size: 50,
+        AudioPlayer player = AudioPlayer();
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            child: const Icon(
+              Icons.play_circle,
+              color: Colors.black,
+              size: 50,
+            ),
+            onTap: () async {
+              await player.play(DeviceFileSource(
+                  BaseConstants.firebaseStoragePath +
+                      mediaUrl +
+                      BaseConstants.firebaseFileAlt));
+            },
           ),
         );
       case "4":
         return Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Image.asset('images/pdf-icon.jpg'),
+          child: GestureDetector(
+              child: Image.asset('images/pdf-icon.jpg'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) {
+                      return PdfDetailScreen(
+                        pdfType: "external",
+                        pdfUrl: BaseConstants.firebaseStoragePath +
+                            mediaUrl +
+                            BaseConstants.firebaseFileAlt,
+                      );
+                    },
+                  ),
+                );
+              }),
         );
       case "5":
-        return const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Icon(
-            Icons.description,
-            color: Colors.black,
-            size: 50,
-          ),
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+              child: const Icon(
+                Icons.description,
+                color: Colors.black,
+                size: 50,
+              ),
+              onTap: () async {
+                final url = Uri.parse(BaseConstants.firebaseStoragePath +
+                    mediaUrl +
+                    BaseConstants.firebaseFileAlt);
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                } else {
+                  throw 'Unable to open url : $url';
+                }
+              }),
         );
       default:
         // do something else

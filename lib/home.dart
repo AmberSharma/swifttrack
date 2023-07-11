@@ -558,7 +558,7 @@ class _HomeState extends State<Home> {
       children: [
         for (int i = 0; i < resourcesListItems.length; i++)
           AccordionSection(
-            isOpen: false,
+            isOpen: (i + 1 == resourcesListItems.length) ? true : false,
             header: Text(resourcesListItems[i].name,
                 style: const TextStyle(
                     color: Colors.black,

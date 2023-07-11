@@ -179,6 +179,7 @@ class _LoginState extends State<Login> {
               if (responseData["status"] == "success") {
                 var data = responseData["data"]["account"];
                 var prefs = await SharedPreferences.getInstance();
+
                 await prefs.setString('uuid', data["uuid"]);
                 await prefs.setString('user_name', data["username"]);
                 await prefs.setString('first_name', data["first_name"]);

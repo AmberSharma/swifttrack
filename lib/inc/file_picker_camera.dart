@@ -1,12 +1,17 @@
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:record_mp3/record_mp3.dart';
 import 'package:swifttrack/classes/flutter_camera.dart';
+import 'package:swifttrack/classes/sound_record_mp3.dart';
 import 'package:swifttrack/classes/sound_recorder.dart';
 import 'package:swifttrack/inc/base_constants.dart';
+import 'package:path_provider/path_provider.dart';
 // import 'package:flutter_camera/flutter_camera.dart';
 // import 'package:lumineux_rewards_app/common/AppBarAction.dart';
 
@@ -23,6 +28,7 @@ class FilePickerOrCamera extends StatefulWidget {
 class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
   int apiCall = 0;
   final recorder = SoundRecorder();
+  late String recordFilePath = "/abcd";
 
   @override
   void initState() {
@@ -39,33 +45,50 @@ class _FilePickerOrCameraState extends State<FilePickerOrCamera> {
   }
 
   Widget audioButton() {
-    final isRecording = recorder.isRecording;
-    final icon = isRecording ? Icons.stop : Icons.graphic_eq;
-    final text = isRecording ? "STOP" : BaseConstants.addAudioLabel;
-    final primaryColor = isRecording ? Colors.red : Colors.white;
+    // final isRecording = recorder.isRecording;
+    // final icon = isRecording ? Icons.stop : Icons.graphic_eq;
+    // final text = isRecording ? "STOP" : BaseConstants.addAudioLabel;
+    // final primaryColor = isRecording ? Colors.red : Colors.white;
     return Column(
       children: [
         IconButton(
-          icon: Icon(icon),
+          icon: const Icon(Icons.graphic_eq),
           iconSize: 75.0,
-          color: primaryColor,
+          color: Colors.white,
           onPressed: () async {
-            await recorder.toggleRecording();
+            // await recorder.toggleRecording();
 
-            if (isRecording) {
+            // if (isRecording) {
+            //   List filesList = [
+            //     {"name": "audio", "data": recorder.getAudioFilePath()}
+            //   ];
+
+            //   if (!mounted) return;
+            //   Navigator.pop(context, filesList);
+            // }
+            // setState(() {});
+
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) {
+                  return const SoundRecordMp3();
+                },
+              ),
+            );
+
+            if (result != null && result.isNotEmpty) {
               List filesList = [
-                {"name": "audio", "data": recorder.getAudioFilePath()}
+                {"name": "audio", "data": result}
               ];
 
               if (!mounted) return;
               Navigator.pop(context, filesList);
             }
-            setState(() {});
           },
         ),
-        Text(
-          text,
-          style: TextStyle(color: primaryColor),
+        const Text(
+          BaseConstants.addAudioLabel,
+          style: TextStyle(color: Colors.white),
         ),
       ],
     );

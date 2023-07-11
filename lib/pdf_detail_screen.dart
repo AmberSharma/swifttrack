@@ -5,8 +5,9 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class PdfDetailScreen extends StatelessWidget {
   final String pdfUrl;
-
-  const PdfDetailScreen({super.key, required this.pdfUrl});
+  final String pdfType;
+  const PdfDetailScreen(
+      {super.key, required this.pdfUrl, required this.pdfType});
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +15,11 @@ class PdfDetailScreen extends StatelessWidget {
       //appBar: AppBar(),
       body: GestureDetector(
         child: Center(
-          child: SfPdfViewer.file(
-            File(pdfUrl),
-          ),
+          child: pdfType == "internal"
+              ? SfPdfViewer.file(
+                  File(pdfUrl),
+                )
+              : SfPdfViewer.network(pdfUrl),
         ),
         onTap: () {
           Navigator.pop(context);

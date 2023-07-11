@@ -1,26 +1,33 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:record_mp3/record_mp3.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swifttrack/classes/video_player.dart';
 // import 'package:swifttrack/classes/sound_recorder.dart';
 import 'package:swifttrack/image_detail_screen.dart';
 import 'package:swifttrack/inc/base_constants.dart';
+import 'package:swifttrack/inc/file_picker_camera.dart';
 import 'package:swifttrack/model/evidence.dart';
 import 'package:swifttrack/model/note.dart';
 import 'package:swifttrack/pdf_detail_screen.dart';
 import 'package:video_player/video_player.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'inc/custom_snack_bar.dart';
-import 'inc/file_picker_camera.dart';
 import 'inc/show_custom_dialog_popup.dart';
+import 'package:path/path.dart' as p;
 
 class EvidenceNotes extends StatefulWidget {
   final int tabNumber;
@@ -47,13 +54,39 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
   final _firebaseStorage = FirebaseStorage.instance;
   AudioPlayer player = AudioPlayer();
 
+  List changedSections = [];
+
   @override
   void initState() {
     super.initState();
     _platformFile = [];
 
     for (var item in widget.evidence) {
-      files.add(item.url);
+      var extension = p.extension(item.url);
+      var fileType = "external";
+
+      var prependString = "";
+      switch (extension) {
+        case ".mp3":
+          prependString = BaseConstants.fileAudio;
+          break;
+        case ".mov":
+        case ".mp4":
+          prependString = BaseConstants.fileVideo;
+          break;
+        case ".pdf":
+          prependString = BaseConstants.filePdf;
+          break;
+        case ".jpg":
+        case ".jpeg":
+        case ".png":
+          prependString = BaseConstants.fileImage;
+      }
+
+      if (prependString.isNotEmpty) {
+        files.add(
+            "$fileType##$prependString##${BaseConstants.firebaseStoragePath}${item.url}${BaseConstants.firebaseFileAlt}");
+      }
     }
   }
 
@@ -100,17 +133,20 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
       );
 
   Widget getGestureButtonWithIcon(file) {
-    //if (file.indexOf('image##') != -1) {
-    var imagePath = file.indexOf('image##') != -1 ? file.split("##")[1] : file;
+    List<String> fileSplit = file.split("##");
+    var imagePath =
+        file.indexOf(BaseConstants.fileImage) != -1 ? fileSplit[2] : file;
     var gestureButton = GestureDetector(
       child: Hero(
         tag: 'imageHero${Random().nextInt(1000)}',
-        child: Image.file(
-          File(
-            imagePath,
-          ),
-          fit: BoxFit.cover,
-        ),
+        child: checkIfInternalFileExists(imagePath)
+            ? Image.file(
+                File(
+                  imagePath,
+                ),
+                fit: BoxFit.cover,
+              )
+            : Image.network(imagePath),
       ),
       onTap: () {
         Navigator.push(
@@ -119,15 +155,15 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
             builder: (_) {
               return ImageDetailScreen(
                 imageUrl: imagePath,
-                imageType: "internal",
+                imageType: fileSplit[0],
               );
             },
           ),
         );
       },
     );
-    //}
-    if (file.indexOf('pdf##') != -1) {
+
+    if (file.indexOf(BaseConstants.filePdf) != -1) {
       gestureButton = GestureDetector(
         child: Image.asset(
           "images/pdf-icon.jpg",
@@ -139,7 +175,8 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
             MaterialPageRoute(
               builder: (_) {
                 return PdfDetailScreen(
-                  pdfUrl: file.split("##")[1],
+                  pdfUrl: fileSplit[2],
+                  pdfType: fileSplit[0],
                 );
               },
             ),
@@ -148,19 +185,19 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
       );
     }
 
-    if (file.indexOf('audio##') != -1) {
+    if (file.indexOf(BaseConstants.fileAudio) != -1) {
       gestureButton = GestureDetector(
         child: const Icon(
           Icons.library_music,
           size: 50,
         ),
         onTap: () async {
-          await player.play(DeviceFileSource(file.split("##")[1]));
+          await player.play(DeviceFileSource(fileSplit[2]));
         },
       );
     }
 
-    if (file.indexOf('video##') != -1) {
+    if (file.indexOf(BaseConstants.fileVideo) != -1) {
       gestureButton = GestureDetector(
         child: const Icon(
           Icons.video_call,
@@ -172,25 +209,9 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
             // Create the SelectionScreen in the next step.
             MaterialPageRoute(
                 builder: (context) => VideoPlayerScreen(
-                      videoUrl: file.split("##")[1],
+                      videoUrl: fileSplit[2],
                     )),
           );
-
-          //await player.play(DeviceFileSource(file.split("##")[1]));
-          // await player.play(
-          //   file.split("##")[1],
-          // );
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (_) {
-          //       await player.play(file.split("##")[1], isLocal: true);
-          //       // return PdfDetailScreen(
-          //       //   pdfUrl: file.split("##")[1],
-          //       // );
-          //     },
-          //   ),
-          // );
         },
       );
     }
@@ -342,28 +363,84 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
 
                   Reference referenceRoot = _firebaseStorage.ref();
                   Reference referenceDirImages = referenceRoot
-                      .child(BaseConstants.participantsLabel + "/" + username);
+                      .child("${BaseConstants.participantsLabel}/$username");
 
                   try {
                     for (var item in files) {
                       if (item.indexOf("##") != -1) {
-                        item = item.split("##")[1];
+                        item = item.split("##")[2];
                       }
 
-                      String uniqueFileName =
-                          DateTime.now().millisecondsSinceEpoch.toString();
+                      if (checkIfInternalFileExists(item)) {
+                        var extension = p.extension(item);
+                        String url =
+                            DateTime.now().millisecondsSinceEpoch.toString();
+                        String thumb = url;
+                        String uniqueFileName = url;
 
-                      Reference referenceImageToUpload =
-                          referenceDirImages.child(uniqueFileName);
+                        if ([".jpeg", ".jpg", ".png"].contains(extension)) {
+                          url = "${url}_1000x1000.jpeg";
+                          thumb = "${thumb}_150x150.jpeg";
+                        } else {
+                          uniqueFileName = uniqueFileName + extension;
+                          url = url + extension;
+                          thumb = thumb + extension;
+                        }
 
-                      TaskSnapshot taskSnapshot =
-                          await referenceImageToUpload.putFile(File(item));
-                      var imageUrl = await taskSnapshot.ref.getDownloadURL();
-                      print(item);
-                      print(imageUrl.toString());
-                      print(referenceImageToUpload.name);
-                      // CollectionReference collectionRef =
-                      //     FirebaseFirestore.instance.collection('user_uploads');
+                        Reference referenceImageToUpload =
+                            referenceDirImages.child(uniqueFileName);
+
+                        TaskSnapshot taskSnapshot =
+                            await referenceImageToUpload.putFile(File(item));
+                        var imageUrl = await taskSnapshot.ref.getDownloadURL();
+                        print(item);
+                        print(imageUrl.toString());
+                        print(referenceImageToUpload.name);
+                        // CollectionReference collectionRef =
+                        //     FirebaseFirestore.instance.collection('user_uploads');
+
+                        var dateTimeNow = DateFormat('yyyy-MM-dd kk:mm:ss')
+                            .format(DateTime.now());
+
+                        var prefs = await SharedPreferences.getInstance();
+
+                        Map<String, dynamic> dataToStore = {
+                          "type": 2,
+                          "url":
+                              "${BaseConstants.firebaseParticipants}%2F$username%2F$url",
+                          "thu":
+                              "${BaseConstants.firebaseParticipants}%2F$username%2F$thumb",
+                          "comment": "",
+                          "editable": false,
+                          "created": dateTimeNow,
+                          "creator_uuid": prefs.getString(BaseConstants.uuid),
+                          "creator_type": "1"
+                        };
+                        var evidence = Evidence.fromJson(dataToStore);
+
+                        // print(evidence.toJson());
+                        var savedModuleData = jsonDecode(prefs
+                            .getString(BaseConstants.userModule)
+                            .toString());
+
+                        var itemIndex = savedModuleData
+                            .indexWhere((e) => e['uuid'] == widget.moduleId);
+
+                        if (itemIndex != -1) {
+                          print(savedModuleData[itemIndex]);
+                          savedModuleData[itemIndex]["updated"] = dateTimeNow;
+                          savedModuleData[itemIndex]["evidence"]
+                              .add(dataToStore);
+                          print(savedModuleData[itemIndex]);
+
+                          prefs.setString(BaseConstants.userModule,
+                              jsonEncode(savedModuleData));
+                        }
+
+                        print(itemIndex);
+                      } else {
+                        print(item);
+                      }
 
                       // Map<String, String> dataToSave = {
                       //   'date': DateTime.now().toString(),
@@ -446,9 +523,11 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                               if (allowedExtensions
                                   .contains(element.extension)) {
                                 if (element.extension == 'pdf') {
-                                  files.add("filepdf##${element.path}");
+                                  files.add(
+                                      "internal##${BaseConstants.filePdf}##${element.path}");
                                 } else {
-                                  files.add("fileimage##${element.path}");
+                                  files.add(
+                                      "internal##${BaseConstants.fileImage}##${element.path}");
                                 }
                                 //print(files);
                                 _platformFile.add(element);
@@ -472,7 +551,8 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                     data: "Maximum 7 files can be added")
                                 .showSnackBar(context);
                           } else {
-                            files.add("fileimage##${file.path}");
+                            files.add(
+                                "internal##${BaseConstants.fileImage}##${file.path}");
                             _platformFile.add(file);
                           }
                         });
@@ -487,7 +567,8 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                     data: "Maximum 7 files can be added")
                                 .showSnackBar(context);
                           } else {
-                            files.add("filevideo##${file.path}");
+                            files.add(
+                                "internal##${BaseConstants.fileVideo}##${file.path}");
                             _platformFile.add(file);
                           }
                         });
@@ -502,7 +583,8 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                     data: "Maximum 7 files can be added")
                                 .showSnackBar(context);
                           } else {
-                            files.add("fileaudio##$file");
+                            files.add(
+                                "internal##${BaseConstants.fileAudio}##$file");
                             _platformFile.add(file);
                           }
                         });
@@ -525,7 +607,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 10.0, horizontal: 15.0),
                             child: Text(
-                              "${widget.note[index].content}Check out the Flutter API docs to customize icon size and color. Check out the Flutter API docs to customize icon size and color.",
+                              widget.note[index].content,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w400,
@@ -559,7 +641,7 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                 ? Container()
                                 : Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 10.0),
+                                        horizontal: 8.0),
                                     child: TextButton(
                                       onPressed: () {},
                                       style: ButtonStyle(
@@ -568,17 +650,17 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
                                             RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(5.0),
-                                              side: BorderSide(
+                                              side: const BorderSide(
                                                   color: Colors.black),
                                             ),
                                           ),
                                           backgroundColor:
                                               MaterialStateProperty.all(
                                                   Colors.black)),
-                                      child: const Text(
-                                        "Annabelle Watson",
-                                        style: TextStyle(
-                                            fontSize: 15,
+                                      child: Text(
+                                        widget.note[index].author.toString(),
+                                        style: const TextStyle(
+                                            fontSize: 12,
                                             color: Colors.white,
                                             fontWeight: FontWeight.normal),
                                       ),
@@ -607,5 +689,9 @@ class _EvidenceNotesState extends State<EvidenceNotes> {
         ),
       ),
     );
+  }
+
+  bool checkIfInternalFileExists(imagePath) {
+    return File(imagePath).existsSync();
   }
 }

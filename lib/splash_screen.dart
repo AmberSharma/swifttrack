@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:swifttrack/inc/base_constants.dart';
 import 'package:swifttrack/login.dart';
 import 'package:swifttrack/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
         child: Image.asset(
-          "images/splash.jpg",
+          "images/splash.png",
           fit: BoxFit.cover,
         ),
       ),
@@ -37,6 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void screenRedirect() async {
     var prefs = await SharedPreferences.getInstance();
+
     uuidValue = "";
     if (prefs.getString("uuid") != null) {
       uuidValue = prefs.getString("uuid")!;
